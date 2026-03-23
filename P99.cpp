@@ -45,94 +45,8 @@ int main(int argc, char* argv[])
 		{
 			cout << "Enter Imagename or Foldername:";
 			cin >> placeholder;
-			if (placeholder[placeholder.length() - 4] != '.')
-			{
-				foldername = placeholder;
-				vector<string> FileList;
-				FileList = GetFilenamesFromFolder(foldername);
-				cout << "Files in Folder:" << endl;
-				for (auto entry : FileList)
-				{
-					cout << entry << endl;
-				}
-				cout << "Enter Filename(Files Bigger then 1GB might cause issues due to RAM overload):";
-				cin >> placeholder;
-				string s = ReadFileToBString(placeholder);
-				inputSize = s.size();
-				if (inputSize < 5000)
-				{
-					cout << "\nRaw Binary:" << s << endl;
-				}
-				cout << "Size of text:" << inputSize << endl;
-				cout << "Evaluating Image Load..." << endl;
-				for (int i = 1; bitcounter < inputSize; i++)
-				{
-					if (i > FileList.size())
-					{
-						cout << "Input too big to encode into availabe Images.\n";
-						cout << "Finished.";
-						return -1;
-					}
-					fullPath = foldername + "\\" + FileList[i];
-					stbi_info(fullPath.c_str(), &w, &h, &channels);
-					cout << w << " " << h << " " << channels << endl;
-					bitcounter += (w * h * channels);
-					NIL = i;
-				}
-				cout << "NIL:" << NIL << "/" << FileList.size() << endl;
-				cout << "Encoding...";
-				for (size_t i = 0; i < NIL; i++)
-				{
-					cout << "Loading image '" << FileList[i] << "'..\n";
-					fullPath = foldername + "\\" + FileList[i];
-					cout << "Loading:" << fullPath << endl;
-					unsigned char* img = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
-					sChunk = s.substr(0, (w * h * channels));
-					cout << "Selected Chunk size:" << sChunk.length();
-					cout << "Encoding..." << endl;
-					bitI = 0;
-					stringI = 0;
-					WriteToImage(img, (w * h * channels), sChunk, false, bitI, stringI);
-					s.erase(0, stringI);
-					cout << "Encoded Chunck size:" << stringI;
-					cout << "Writing file..." << endl;
-					fullPath = foldername + "\\" + FileList[i].insert(FileList[i].length() - 4, 1, 'M');
-					cout << "Writing to:" << fullPath << endl;
-					stbi_write_png(fullPath.c_str(), w, h, channels, img, channels * w);
-					stbi_image_free(img);
-				}
-			}
-
-			else
-			{
-				cout << "\nLoading image '" << placeholder << "'...\n";
-				unsigned char* img = stbi_load(placeholder.c_str(), &w, &h, &channels, 4);
-				imgSize = w * h * 4;
-				if (img != nullptr)cout << "Loaded image.\n";
-				else
-				{
-					cout << "Failed to load image.";
-					return 0;
-				}
-				cout << "Enter Filename:";
-				cin >> placeholder;
-				string s = ReadFileToBString(placeholder);
-				cout << "\nRaw Binary:" << s << endl;
-				cout << "Size of text:" << s.length() << endl;
-				if (s.length() > imgSize)
-				{
-					cout << "Input too Large." << endl;
-					stbi_image_free(img);
-					cout << "Finished.\n";
-					return -1;
-				}
-				cout << "Encoding...\n";
-				WriteToImage(img, imgSize, s, true, bitI, stringI);
-				cout << "Writing file 'output.png'...\n";
-				stbi_write_png("output.png", w, h, 4, img, 4 * w);
-				stbi_image_free(img);
-				cout << "Finished.\n";
-			}
+			if (placeholder[placeholder.length() - 4] != '.')EncodeFolder(placeholder);
+			else EncodeImage(placeholder);
 		}
 		else if (placeholder == "D")
 		{
@@ -146,41 +60,7 @@ int main(int argc, char* argv[])
 			}
 			else
 			{
-				unsigned char* imgR = stbi_load(placeholder.c_str(), &w, &h, &channels, 4);
-				cout << "Loading image '" << placeholder << "'...";
-				if (imgR == nullptr)
-				{
-					cout << "\nFailed to load image, exiting.";
-					return 0;
-				}
-				cout << "\nLoaded image.\n";
-				cout << "Enter Original Filename:";
-				cin >> placeholder;
-				unsigned char* imgC = stbi_load(placeholder.c_str(), &w, &h, &channels, 4);
-				if (imgC == nullptr)
-				{
-					cout << "\nFailed to load image, exiting.";
-					return 0;
-				}
-				cout << "\nLoaded image.\n";
-				//Pre Processing
-				Filename = ReadFilenameFromImageC(imgC, imgR, bitI, stringI);
-				cout << "Filename:" << Filename << endl;
-				//Actual Processing
-				ReadDataFromImageC(imgC, imgR, bitI, stringI, decoded);
-				cout << "Read following binary:";
-				for (bool i : decoded)
-				{
-					if (i == false)cout << "0";
-					if (i == true)cout << "1";
-				}
-				cout << "\nWhich in ascci is:\n" << BitsToAscii(decoded) << endl;
-				cout << "Writing to file:'" << Filename << "'..." << endl;
-				WriteBitsToFile(Filename, decoded);
-				cout << "Finished writing.\nFreeing memory..." << endl;
-				stbi_image_free(imgR);
-				stbi_image_free(imgC);
-				cout << "Finished";
+				DecodeImage(placeholder);
 			}
 		}
 	}
