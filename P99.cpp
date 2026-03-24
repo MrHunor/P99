@@ -54,9 +54,7 @@ int main(int argc, char* argv[])
 			cin >> placeholder;
 			if (placeholder[placeholder.length() - 4] != '.')
 			{
-				eFoldername = placeholder;
-				cout << "Enter Original Foldername:" << endl;
-				cin >> oFoldername;
+				DecodeFolder(placeholder);
 			}
 			else
 			{
