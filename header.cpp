@@ -21,15 +21,15 @@ vector<string> GetFilenamesFromFolder(string path)
 	return PathV;
 }
 
-string ReadFilenameFromImageC(unsigned char* imgC, unsigned char* imgR, int& bitI, int& stringI)
+string ReadFilenameFromImageC(unsigned char* imgC, unsigned char* imgR, int& bitI, int& stringI, ostream& out)
 {
 	bool end = false;
 	vector<bool> decoded;
 	decoded.reserve(200);
 	while (!end)
 	{
-		cout << "bitI:" << bitI << endl;
-		cout << "stringI:" << stringI << endl;
+		out << "bitI:" << bitI << endl;
+		out << "stringI:" << stringI << endl;
 		if (imgC[bitI] > 0 && imgC[bitI] < 255)
 		{
 			if (imgR[bitI] == imgC[bitI] - 1)
@@ -59,13 +59,14 @@ string ReadFilenameFromImageC(unsigned char* imgC, unsigned char* imgR, int& bit
 	string s = BitsToAscii(decoded);
 	return  s.erase(s.size() - 1, 1);
 }
-void ReadDataFromImageC(unsigned char* imgC, unsigned char* imgR, int size, int& bitI, int& stringI, vector<bool>& decoded)
+
+void ReadDataFromImageC(unsigned char* imgC, unsigned char* imgR, int size, int& bitI, int& stringI, vector<bool>& decoded, ostream& out)
 {
 	bool end = false;
-	while (!end&&bitI<size)
+	while (!end && bitI < size)
 	{
-		//cout << "bitI:" << bitI << endl;
-		//cout << "stringI:" << stringI << endl;
+		out << "bitI:" << bitI << endl;
+		out << "stringI:" << stringI << endl;
 		if (imgC[bitI] > 0 && imgC[bitI] < 255)
 		{
 			if (imgR[bitI] == imgC[bitI] - 1)
@@ -86,24 +87,24 @@ void ReadDataFromImageC(unsigned char* imgC, unsigned char* imgR, int size, int&
 		bitI++;
 	}
 }
+
 //For which Filelist1 should be oFilelist and Filelist2 eFilelist
-bool CheckFilelists(const vector<string>& FileList1,const vector<string>& FileList2)
+bool CheckFilelists(const vector<string>& FileList1, const vector<string>& FileList2)
 {
 	if (FileList1.size() != FileList2.size()) return true;
 
 	for (size_t i = 0; i < FileList1.size(); i++)
 	{
-		string modified = FileList1[i]; 
+		string modified = FileList1[i];
 		modified.insert(modified.length() - 4, 1, 'M');
 		if (modified != FileList2[i]) return true;
 	}
 	return false;
 }
 
-
-bool DecodeFolder(const string& eFoldername)
+bool DecodeFolder(const string& eFoldername, ostream& out)
 {
-	//Variables 
+	//Variables
 	unsigned char* imgO{};
 	unsigned char* imgE{};
 	int w{}, h{}, channels{}, stringI{}, bitI{};
@@ -117,22 +118,22 @@ bool DecodeFolder(const string& eFoldername)
 	oFileList = GetFilenamesFromFolder(oFoldername);
 	if (CheckFilelists(oFileList, eFileList) != 0)
 	{
-		cout << "Filelists dont match!" << endl;
+		out << "Filelists dont match!" << endl;
 		return 1;
 	}
 
-    //First image hold the filename
+	//First image hold the filename
 	fullPath = oFoldername + "\\" + oFileList[0];
-	cout << "Loading:" << fullPath << endl;
+	out << "Loading:" << fullPath << endl;
 	imgO = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
 	fullPath = eFoldername + "\\" + eFileList[0];
-	cout << "Loading:" << fullPath << endl;
+	out << "Loading:" << fullPath << endl;
 	imgE = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
-	filename=ReadFilenameFromImageC(imgO, imgE, bitI, stringI);
-	cout << "Filename:" << filename << endl;
+	filename = ReadFilenameFromImageC(imgO, imgE, bitI, stringI,out);
+	out << "Filename:" << filename << endl;
 	//Read remaining data from first image
-	ReadDataFromImageC(imgO, imgE, (w * h * channels), bitI, stringI, decoded);
-	
+	ReadDataFromImageC(imgO, imgE, (w * h * channels), bitI, stringI, decoded,out);
+
 	//Read remaining data from the remaining images
 	stbi_image_free(imgO);
 	stbi_image_free(imgE);
@@ -142,79 +143,71 @@ bool DecodeFolder(const string& eFoldername)
 		bitI = 0;
 		decodedBuffer.clear();
 		fullPath = oFoldername + "\\" + oFileList[i];
-		cout << "Loading:" << fullPath << endl;
+		out << "Loading:" << fullPath << endl;
 		imgO = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
 		fullPath = eFoldername + "\\" + eFileList[i];
-		cout << "Loading:" << fullPath << endl;
+		out << "Loading:" << fullPath << endl;
 		imgE = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
-		ReadDataFromImageC(imgO, imgE, (w * h * channels), bitI, stringI, decodedBuffer);
+		ReadDataFromImageC(imgO, imgE, (w * h * channels), bitI, stringI, decodedBuffer,out);
 		decoded.insert(decoded.end(), decodedBuffer.begin(), decodedBuffer.end());
 		stbi_image_free(imgO);
 		stbi_image_free(imgE);
 	}
-	
-	/*	cout << "Read following binary from all images:";
-		for (bool i : decoded)
-		{
-			if (i == false)cout << "0";
-			if (i == true)cout << "1";
-		}
-		cout << "\nWhich in ascci is:\n" << BitsToAscii(decoded) << endl;*/
-	cout << "Skipped Output. File to big!" << endl;
-	cout << "Writing to file:'" << filename << "'..." << endl;
+
+	out << "Writing to file:'" << filename << "'..." << endl;
 	WriteBitsToFile(filename, decoded);
-	cout << "Finished writing." << endl;
+	out << "Finished writing." << endl;
 	return 0;
 }
 
-bool DecodeImage(const string& eFilename)
+bool DecodeImage(const string& eFilename, ostream& out)
 {
 	string placeholder, Filename;
 	int w{}, h{}, channels{}, bitI{}, stringI{};
 	vector<bool> decoded;
 	unsigned char* imgR = stbi_load(eFilename.c_str(), &w, &h, &channels, 3);
-	cout << "Loading image '" << eFilename << "'...";
+	out << "Loading image '" << eFilename << "'...";
 	if (imgR == nullptr)
 	{
-		cout << "\nFailed to load image, exiting.";
+		out << "\nFailed to load image, exiting.";
 		return 1;
 	}
-	cout << "\nLoaded image.\n";
+	out << "\nLoaded image.\n";
 	cout << "Enter Original Filename:";
 	cin >> placeholder;
 	unsigned char* imgC = stbi_load(placeholder.c_str(), &w, &h, &channels, 3);
 	if (imgC == nullptr)
 	{
-		cout << "\nFailed to load image, exiting.";
+		out << "\nFailed to load image, exiting.";
 		return 1;
 	}
-	cout << "\nLoaded image.\n";
+	out << "\nLoaded image.\n";
 	//Pre Processing
-	Filename = ReadFilenameFromImageC(imgC, imgR, bitI, stringI);
-	cout << "Filename:" << Filename << endl;
+	Filename = ReadFilenameFromImageC(imgC, imgR, bitI, stringI,out);
+	out << "Filename:" << Filename << endl;
 	//Actual Processing
-	ReadDataFromImageC(imgC, imgR,(w*h*channels), bitI, stringI, decoded);
-	cout << "Read following binary:";
+	ReadDataFromImageC(imgC, imgR, (w * h * channels), bitI, stringI, decoded,out);
+	out << "Read following binary:";
 	for (bool i : decoded)
 	{
-		if (i == false)cout << "0";
+		if (i == false)out << "0";
 		if (i == true)cout << "1";
 	}
-	cout << "\nWhich in ascci is:\n" << BitsToAscii(decoded) << endl;
-	cout << "Writing to file:'" << Filename << "'..." << endl;
+	out << "\nWhich in ascci is:\n" << BitsToAscii(decoded) << endl;
+	out << "Writing to file:'" << Filename << "'..." << endl;
 	WriteBitsToFile(Filename, decoded);
-	cout << "Finished writing.\nFreeing memory..." << endl;
+	out << "Finished writing.\nFreeing memory..." << endl;
 	stbi_image_free(imgR);
 	stbi_image_free(imgC);
-	cout << "Finished";
+	out << "Finished";
 	return 0;
 }
 
-bool EncodeImage(const string& filename)
+bool EncodeImage(const string& filename, ostream& out)
 {
 	string placeholder{};
 	int w{}, h{}, channels{}, imgSize{}, bitI{}, stringI{};
-	cout << "\nLoading image '" << placeholder << "'...\n";
+	out << "\nLoading image '" << placeholder << "'...\n";
 	unsigned char* img = stbi_load(placeholder.c_str(), &w, &h, &channels, 3);
 	imgSize = w * h * 4;
 	if (img != nullptr)cout << "Loaded image.\n";
@@ -226,8 +219,8 @@ bool EncodeImage(const string& filename)
 	cout << "Enter Filename:";
 	cin >> placeholder;
 	string s = ReadFileToBString(placeholder);
-	cout << "\nRaw Binary:" << s << endl;
-	cout << "Size of text:" << s.length() << endl;
+	out << "\nRaw Binary:" << s << endl;
+	out << "Size of text:" << s.length() << endl;
 	if (s.length() > imgSize)
 	{
 		cout << "Input too Large." << endl;
@@ -235,78 +228,74 @@ bool EncodeImage(const string& filename)
 		cout << "Finished.\n";
 		return 1;
 	}
-	cout << "Encoding...\n";
-	WriteToImage(img, imgSize, s, true, bitI, stringI);
-	cout << "Writing file 'output.png'...\n";
+	out << "Encoding...\n";
+	WriteToImage(img, imgSize, s,out, bitI, stringI);
+	out << "Writing file 'output.png'...\n";
 	stbi_write_png("output.png", w, h, 4, img, 4 * w);
 	stbi_image_free(img);
-	cout << "Finished.\n";
+	out << "Finished.\n";
 	return 0;
 }
 
-bool EncodeFolder(const string& foldername)
+bool EncodeFolder(const string& foldername, ostream& out)
 {
 	vector<string> FileList;
 	string placeholder{}, fullPath{}, sChunk{};
 	size_t inputSize{};
 	int w{}, h{}, channels{}, bitcounter{}, NIL{}, bitI{}, stringI{};
 	FileList = GetFilenamesFromFolder(foldername);
-	cout << "Files in Folder:" << endl;  
+	out << "Files in Folder:" << endl;
 	for (auto entry : FileList)
 	{
-		cout << entry << endl;
+		out << entry << endl;
 	}
 	cout << "Enter Filename(Files Bigger then 1GB might cause issues due to RAM overload):";
 	cin >> placeholder;
 	string s = ReadFileToBString(placeholder);
 	inputSize = s.size();
-	if (inputSize < 5000)
-	{
-		cout << "\nRaw Binary:" << s << endl;
-	}
-	cout << "Size of text:" << inputSize << endl;
-	cout << "Evaluating Image Load..." << endl;
+	out << "Size of text:" << inputSize << endl;
+	out << "Evaluating Image Load..." << endl;
 	for (int i = 1; bitcounter < inputSize; i++)
 	{
-		if (i > FileList.size()-1)
+		if (i > FileList.size() - 1)
 		{
-			cout << "Input too big to encode into availabe Images.\n";
-			cout << "Finished.";
+			out << "Input too big to encode into availabe Images.\n";
+			out << "Finished.";
 			return 1;
 		}
 		fullPath = foldername + "\\" + FileList[i];
 		stbi_info(fullPath.c_str(), &w, &h, &channels);
-		cout << w << " " << h << " " << channels << endl;
+		out << w << " " << h << " " << channels << endl;
 		bitcounter += (w * h * channels);
 		NIL = i;
 	}
-	cout << "NIL:" << NIL << "/" << FileList.size() << endl;
-	cout << "Encoding...";
+	out << "NIL:" << NIL << "/" << FileList.size() << endl;
+	out << "Encoding...";
 	for (size_t i = 0; i < NIL; i++)
 	{
-		cout << "Loading image '" << FileList[i] << "'..\n";
+		out << "Loading image '" << FileList[i] << "'..\n";
 		fullPath = foldername + "\\" + FileList[i];
-		cout << "Loading:" << fullPath << endl;
+		out << "Loading:" << fullPath << endl;
 		unsigned char* img = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
 		sChunk = s.substr(0, (w * h * channels));
-		cout << "Selected Chunk size:" << sChunk.length();
-		cout << "Encoding..." << endl;
+		out << "Selected Chunk size:" << sChunk.length();
+		out << "Encoding..." << endl;
 		bitI = 0;
 		stringI = 0;
-		WriteToImage(img, (w * h * channels), sChunk, false, bitI, stringI);
+		WriteToImage(img, (w * h * channels), sChunk, out, bitI, stringI);
 		s.erase(0, stringI);
-		cout << "Encoded Chunck size:" << stringI;
-		cout << "Writing file..." << endl;
+		out << "Encoded Chunck size:" << stringI;
+		out << "Writing file..." << endl;
 		fullPath = foldername + "\\" + FileList[i].insert(FileList[i].length() - 4, 1, 'M');
-		cout << "Writing to:" << fullPath << endl;
+		out << "Writing to:" << fullPath << endl;
 		stbi_write_png(fullPath.c_str(), w, h, channels, img, channels * w);
 		stbi_image_free(img);
 	}
-	cout << "Finished!" << endl;
+	out << "Finished!" << endl;
 	return 0;
 }
 
-bool WriteToImage(unsigned char* img, size_t imgSize, const string& s, bool verbose, int& bitI, int& stringI)
+bool WriteToImage(unsigned char* img, size_t imgSize, const string& s, ostream& out, int& bitI, int& stringI)
 {
 	auto sLength = s.length();
 	while (stringI < sLength)
@@ -315,11 +304,8 @@ bool WriteToImage(unsigned char* img, size_t imgSize, const string& s, bool verb
 		{
 			return 1;
 		}
-		if (verbose)
-		{
-			cout << "bitI:" << bitI << "=" << static_cast<int>(img[bitI]) << endl;
-			cout << "stringI:" << stringI << "=" << s[stringI] << endl;
-		}
+		out << "bitI:" << bitI << "=" << static_cast<int>(img[bitI]) << endl;
+		out << "stringI:" << stringI << "=" << s[stringI] << endl;
 		if (img[bitI] > 0 && img[bitI] < 255)
 		{
 			if (s[stringI] == '0')
@@ -362,6 +348,7 @@ string ReadFileToBString(const string& filename)
 	buffer.insert(0, filename + '|');
 	return TextToAsciiB(buffer);
 }
+
 void WriteBitsToFile(const std::string& filename, const std::vector<bool>& bits) {
 	std::ofstream out(filename, std::ios::binary);
 	if (!out) {
@@ -384,6 +371,7 @@ void WriteBitsToFile(const std::string& filename, const std::vector<bool>& bits)
 
 	out.write(reinterpret_cast<const char*>(bytes.data()), bytes.size());
 }
+
 std::string BitsToAscii(const std::vector<bool>& bits)
 {
 	if (bits.size() % 8 != 0)
