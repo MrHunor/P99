@@ -32,3 +32,4 @@ extern bool EncodeFolder(const string& foldername, ostream& out);
 extern bool EncodeImage(const string& filename, ostream& out);
 extern bool DecodeImage(const string& eFilename, ostream& out);
 extern bool DecodeFolder(const string& eFoldername, ostream& out);
+extern bool createFolder(const string& name);

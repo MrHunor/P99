@@ -12,6 +12,16 @@
 using namespace std;
 namespace fs = std::filesystem;
 
+bool createFolder(const string& name)
+{
+	if (std::filesystem::create_directory(name)) {
+		return 0;
+	}
+	else {
+		return 1;
+	}
+}
+
 vector<string> GetFilenamesFromFolder(string path)
 {
 	vector<string> PathV;
@@ -65,8 +75,9 @@ void ReadDataFromImageC(unsigned char* imgC, unsigned char* imgR, int size, int&
 	bool end = false;
 	while (!end && bitI < size)
 	{
-		out << "bitI:" << bitI << endl;
-		out << "stringI:" << stringI << endl;
+		//These two lines may be useful for debugging but are horrible for performace
+		//	out << "bitI:" << bitI << "=" << static_cast<int>(img[bitI]) << endl;
+	//out << "stringI:" << stringI << "=" << s[stringI] << endl;
 		if (imgC[bitI] > 0 && imgC[bitI] < 255)
 		{
 			if (imgR[bitI] == imgC[bitI] - 1)
@@ -129,10 +140,10 @@ bool DecodeFolder(const string& eFoldername, ostream& out)
 	fullPath = eFoldername + "\\" + eFileList[0];
 	out << "Loading:" << fullPath << endl;
 	imgE = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
-	filename = ReadFilenameFromImageC(imgO, imgE, bitI, stringI,out);
+	filename = ReadFilenameFromImageC(imgO, imgE, bitI, stringI, out);
 	out << "Filename:" << filename << endl;
 	//Read remaining data from first image
-	ReadDataFromImageC(imgO, imgE, (w * h * channels), bitI, stringI, decoded,out);
+	ReadDataFromImageC(imgO, imgE, (w * h * channels), bitI, stringI, decoded, out);
 
 	//Read remaining data from the remaining images
 	stbi_image_free(imgO);
@@ -148,7 +159,7 @@ bool DecodeFolder(const string& eFoldername, ostream& out)
 		fullPath = eFoldername + "\\" + eFileList[i];
 		out << "Loading:" << fullPath << endl;
 		imgE = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
-		ReadDataFromImageC(imgO, imgE, (w * h * channels), bitI, stringI, decodedBuffer,out);
+		ReadDataFromImageC(imgO, imgE, (w * h * channels), bitI, stringI, decodedBuffer, out);
 		decoded.insert(decoded.end(), decodedBuffer.begin(), decodedBuffer.end());
 		stbi_image_free(imgO);
 		stbi_image_free(imgE);
@@ -183,10 +194,10 @@ bool DecodeImage(const string& eFilename, ostream& out)
 	}
 	out << "\nLoaded image.\n";
 	//Pre Processing
-	Filename = ReadFilenameFromImageC(imgC, imgR, bitI, stringI,out);
+	Filename = ReadFilenameFromImageC(imgC, imgR, bitI, stringI, out);
 	out << "Filename:" << Filename << endl;
 	//Actual Processing
-	ReadDataFromImageC(imgC, imgR, (w * h * channels), bitI, stringI, decoded,out);
+	ReadDataFromImageC(imgC, imgR, (w * h * channels), bitI, stringI, decoded, out);
 	out << "Read following binary:";
 	for (bool i : decoded)
 	{
@@ -229,7 +240,7 @@ bool EncodeImage(const string& filename, ostream& out)
 		return 1;
 	}
 	out << "Encoding...\n";
-	WriteToImage(img, imgSize, s,out, bitI, stringI);
+	WriteToImage(img, imgSize, s, out, bitI, stringI);
 	out << "Writing file 'output.png'...\n";
 	stbi_write_png("output.png", w, h, 4, img, 4 * w);
 	stbi_image_free(img);
@@ -237,13 +248,16 @@ bool EncodeImage(const string& filename, ostream& out)
 	return 0;
 }
 
-bool EncodeFolder(const string& foldername, ostream& out)
+bool EncodeFolder(const string& ofoldername, ostream& out)
 {
 	vector<string> FileList;
-	string placeholder{}, fullPath{}, sChunk{};
+	string placeholder{}, fullPath{}, sChunk{}, efoldername{};
 	size_t inputSize{};
 	int w{}, h{}, channels{}, bitcounter{}, NIL{}, bitI{}, stringI{};
-	FileList = GetFilenamesFromFolder(foldername);
+
+	efoldername = ofoldername + "M";
+	createFolder(efoldername);
+	FileList = GetFilenamesFromFolder(ofoldername);
 	out << "Files in Folder:" << endl;
 	for (auto entry : FileList)
 	{
@@ -263,7 +277,7 @@ bool EncodeFolder(const string& foldername, ostream& out)
 			out << "Finished.";
 			return 1;
 		}
-		fullPath = foldername + "\\" + FileList[i];
+		fullPath = ofoldername + "\\" + FileList[i];
 		stbi_info(fullPath.c_str(), &w, &h, &channels);
 		out << w << " " << h << " " << channels << endl;
 		bitcounter += (w * h * channels);
@@ -274,7 +288,7 @@ bool EncodeFolder(const string& foldername, ostream& out)
 	for (size_t i = 0; i < NIL; i++)
 	{
 		out << "Loading image '" << FileList[i] << "'..\n";
-		fullPath = foldername + "\\" + FileList[i];
+		fullPath = ofoldername + "\\" + FileList[i];
 		out << "Loading:" << fullPath << endl;
 		unsigned char* img = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
 		sChunk = s.substr(0, (w * h * channels));
@@ -286,7 +300,7 @@ bool EncodeFolder(const string& foldername, ostream& out)
 		s.erase(0, stringI);
 		out << "Encoded Chunck size:" << stringI;
 		out << "Writing file..." << endl;
-		fullPath = foldername + "\\" + FileList[i].insert(FileList[i].length() - 4, 1, 'M');
+		fullPath = efoldername + "\\" + FileList[i].insert(FileList[i].length() - 4, 1, 'M');
 		out << "Writing to:" << fullPath << endl;
 		stbi_write_png(fullPath.c_str(), w, h, channels, img, channels * w);
 		stbi_image_free(img);
@@ -304,8 +318,9 @@ bool WriteToImage(unsigned char* img, size_t imgSize, const string& s, ostream& 
 		{
 			return 1;
 		}
-		out << "bitI:" << bitI << "=" << static_cast<int>(img[bitI]) << endl;
-		out << "stringI:" << stringI << "=" << s[stringI] << endl;
+		//These two lines may be useful for debugging but are horrible for performace
+			//	out << "bitI:" << bitI << "=" << static_cast<int>(img[bitI]) << endl;
+		//out << "stringI:" << stringI << "=" << s[stringI] << endl;
 		if (img[bitI] > 0 && img[bitI] < 255)
 		{
 			if (s[stringI] == '0')

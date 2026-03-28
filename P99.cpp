@@ -12,42 +12,27 @@
 #include "Header.h"
 using std::cout;
 using std::endl;
-// implement inpout checking, file streaming
+// implement input checking, file streaming
 int main(int argc, char* argv[])
 {
-	bool end = false;
-
-	vector<bool> decoded;
-	decoded.clear();
 	string placeholder;
-	string foldername;
-	string Filename;
-	int w, h, channels;
-	int imgChannels;
-	int stringI = 0;
-	int bitI = 0;
-	int imgSize;
-	string eFoldername;
-	string oFoldername;
-	uint64_t inputSize;
-	int bitcounter = 0;
-	int NIL = 0;//Needed Image Load (how many Images are needed to encode the input)
-	string sChunk;
-	string fullPath;
-	char output;
 	std::ostream* out = nullptr;
 	std::ofstream file("output.txt");
 	NullStream nullout;
 
 	stbi_write_png_compression_level = 9;
+
 	switch (argc)
 	{
 	case 1:
 	{
 		cout << "Verbose (V), Fileoutput(F) or None (N):";
 		cin >> placeholder;
+
 		if (placeholder == "V") {
 			out = &std::cout;
+			file.close();
+			remove("output.txt");
 		}
 		else if (placeholder == "F") {
 			file.open("output.txt");
@@ -55,6 +40,8 @@ int main(int argc, char* argv[])
 		}
 		else if (placeholder == "N") {
 			out = &nullout;
+			file.close();
+			remove("output.txt");
 		}
 		else {
 			cout << "Invalid input.";
@@ -63,13 +50,14 @@ int main(int argc, char* argv[])
 
 		cout << "\nEncode (E) or Decode (D):";
 		cin >> placeholder;
-
 		if (placeholder == "E")
 		{
 			cout << "Enter Imagename or Foldername:";
 			cin >> placeholder;
-			if (placeholder[placeholder.length() - 4] != '.')EncodeFolder(placeholder,*out);
-			else EncodeImage(placeholder,*out);
+			if (placeholder[placeholder.length() - 4] != '.')
+				EncodeFolder(placeholder, *out);
+			else
+				EncodeImage(placeholder, *out);
 		}
 		else if (placeholder == "D")
 		{
@@ -77,11 +65,11 @@ int main(int argc, char* argv[])
 			cin >> placeholder;
 			if (placeholder[placeholder.length() - 4] != '.')
 			{
-				DecodeFolder(placeholder,*out);
+				DecodeFolder(placeholder, *out);
 			}
 			else
 			{
-				DecodeImage(placeholder,*out);
+				DecodeImage(placeholder, *out);
 			}
 		}
 	}
