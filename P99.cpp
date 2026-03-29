@@ -15,7 +15,7 @@ using std::cout;
 using std::endl;
 using std::cin;
 
-// implement input checking, file streaming
+finish argv
 int main(int argc, char* argv[])
 {
 	string placeholder;
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 					EncodeImage(placeholder, *out);
 			}
 			else InvalidInputMessage();
-			}
+		}
 		else if (placeholder == "D")
 		{
 			cout << "Enter Encoded Filename or Foldername:";
@@ -90,10 +90,10 @@ int main(int argc, char* argv[])
 	default:
 		if (argv[1] == "E" || argv[1] == "e")
 		{
-			//second arg is file/foldername to encode to 
+			//second arg is file/foldername to encode to
 			if (argv[2][strlen(argv[2]) - 4] != '.')
 			{
-			//Folder
+				//Folder
 			}
 			else
 			{
@@ -108,5 +108,4 @@ int main(int argc, char* argv[])
 		}
 		InvalidInputMessage();
 	}
-	
 }

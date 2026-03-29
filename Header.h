@@ -25,7 +25,7 @@ private:
 
 //Functions in header.cpp
 string TextToAsciiB(string s);
-extern std::string BitsToAscii(const std::vector<bool>& bits);
+extern string BitsToAscii(const std::vector<bool>& bits);
 extern string ReadFileToBString(const string& filename);
 extern bool WriteToImage(unsigned char* img, size_t imgSize, const string& s, ostream& out, int& bitI, int& stringI);
 extern void WriteBitsToFile(const std::string& filename, const std::vector<bool>& bits);
@@ -40,3 +40,6 @@ extern bool createFolder(const string& name);
 extern bool checkEx(const string& path);
 extern void InvalidInputMessage(const string& details = "[No Details]");
 extern void EncodeImageNI(const string& ifilename, const string& cfilename, ostream& out);
+extern void DecodeImageNI(const string& oFilename, const string& eFilename, ostream& out);
+extern void EncodeFolderNI(const string& ofoldername, const string& cfilename, ostream& out);
+extern void DecodeFolder(const string& oFoldername, const string& eFoldername, ostream& out);
