@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
 			remove("output.txt");
 		}
 		else {
-			cout << "Invalid input.";
+			InvalidInputMessage();
 			return 0;
 		}
 
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 				else
 					EncodeImage(placeholder, *out);
 			}
-			else invalidInputMessage("");
+			else InvalidInputMessage();
 			}
 		else if (placeholder == "D")
 		{
@@ -81,16 +81,32 @@ int main(int argc, char* argv[])
 					DecodeImage(placeholder, *out);
 				}
 			}
-			else invalidInputMessage("");
+			else InvalidInputMessage();
 		}
 	}
 
 	break;
-	/*default:
-	{
-		put argc version here
+	//arg ("console") version
+	default:
+		if (argv[1] == "E" || argv[1] == "e")
+		{
+			//second arg is file/foldername to encode to 
+			if (argv[2][strlen(argv[2]) - 4] != '.')
+			{
+			//Folder
+			}
+			else
+			{
+				//File
+			}
+
+			return 0;
+		}
+		if (argv[1] == "D" || argv[1] == "d")
+		{
+			return 0;
+		}
+		InvalidInputMessage();
 	}
-	*/
-	}
-	return 0;
+	
 }

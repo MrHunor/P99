@@ -7,9 +7,14 @@
 #include <filesystem>
 #include <stb_image.h>
 #include <stb_image_write.h>
-#include <stdexcept>  
-#include <cstdint>    
+#include <stdexcept>
+#include <cstdint>
 #include "Header.h"
+
+/*
+NI stands for NO INPUT, so its a clone of a function but it doesnt use any user input functions and soley depends on its given paramters
+
+*/
 
 namespace fs = std::filesystem;
 
@@ -20,7 +25,7 @@ using std::cin;
 using std::endl;
 using std::ostream;
 
-void invalidInputMessage(const string& details)
+void InvalidInputMessage(const string& details)
 {
 	cout << "Your Input was Invalid:" << details;
 	exit(1);
@@ -151,7 +156,7 @@ bool DecodeFolder(const string& eFoldername, ostream& out)
 
 	cout << "Enter Original Foldername:";
 	cin >> oFoldername;
-	if (!checkEx(oFoldername))invalidInputMessage("");
+	if (!checkEx(oFoldername))InvalidInputMessage("");
 	eFileList = GetFilenamesFromFolder(eFoldername);
 	oFileList = GetFilenamesFromFolder(oFoldername);
 	if (CheckFilelists(oFileList, eFileList) != 0)
@@ -198,7 +203,7 @@ bool DecodeFolder(const string& eFoldername, ostream& out)
 	return 0;
 }
 
-bool DecodeImage(const string& eFilename, ostream& out)
+bool DecodeImage(const string& oFilename, ostream& out)
 {
 	string placeholder, Filename;
 	int w{}, h{}, channels{}, bitI{}, stringI{};
@@ -213,7 +218,7 @@ bool DecodeImage(const string& eFilename, ostream& out)
 	out << "\nLoaded image.\n";
 	cout << "Enter Original Filename:";
 	cin >> placeholder;
-	if (!checkEx(placeholder))invalidInputMessage("");
+	if (!checkEx(placeholder))InvalidInputMessage("");
 	unsigned char* imgC = stbi_load(placeholder.c_str(), &w, &h, &channels, 3);
 	if (imgC == nullptr)
 	{
@@ -246,8 +251,8 @@ bool EncodeImage(const string& filename, ostream& out)
 {
 	string placeholder{};
 	int w{}, h{}, channels{}, imgSize{}, bitI{}, stringI{};
-	out << "\nLoading image '" << placeholder << "'...\n";
-	unsigned char* img = stbi_load(placeholder.c_str(), &w, &h, &channels, 3);
+	out << "\nLoading image '" << filename << "'...\n";
+	unsigned char* img = stbi_load(filename.c_str(), &w, &h, &channels, 3);
 	imgSize = w * h * 4;
 	if (img != nullptr)cout << "Loaded image.\n";
 	else
@@ -255,11 +260,10 @@ bool EncodeImage(const string& filename, ostream& out)
 		cout << "Failed to load image.";
 		return 1;
 	}
-	cout << "Enter Filename:";
+	cout << "Enter the contanting Filename:";
 	cin >> placeholder;
-	if (!checkEx(placeholder))invalidInputMessage("");
+	if (!checkEx(placeholder))InvalidInputMessage("");
 	string s = ReadFileToBString(placeholder);
-	out << "\nRaw Binary:" << s << endl;
 	out << "Size of text:" << s.length() << endl;
 	if (s.length() > imgSize)
 	{
@@ -275,6 +279,78 @@ bool EncodeImage(const string& filename, ostream& out)
 	stbi_image_free(img);
 	out << "Finished.\n";
 	return 0;
+}
+
+void EncodeImageNI(const string& ifilename, const string& cfilename, ostream& out)
+{
+	int w{}, h{}, channels{}, imgSize{}, bitI{}, stringI{};
+	out << "\nLoading image '" << ifilename << "'...\n";
+	unsigned char* img = stbi_load(ifilename.c_str(), &w, &h, &channels, 3);
+	imgSize = w * h * 4;
+	if (img != nullptr)cout << "Loaded image.\n";
+	else
+	{
+		cout << "Failed to load image.";
+		exit(1);
+	}
+	if (!checkEx(cfilename))InvalidInputMessage("The containing File (cfilename) does not exist or could not be found.");
+	string s = ReadFileToBString(cfilename);
+	out << "Size of text:" << s.length() << endl;
+	if (s.length() > imgSize)
+	{
+		cout << "Input too Large." << endl;
+		exit(1);
+	}
+	out << "Encoding...\n";
+	WriteToImage(img, imgSize, s, out, bitI, stringI);
+	out << "Writing file 'output.png'...\n";
+	stbi_write_png("output.png", w, h, 4, img, 4 * w);
+	stbi_image_free(img);
+	out << "Finished.\n";
+}
+
+void DecodeImageNI(const string& oFilename, const string& eFilename, ostream& out)
+{
+	string filename{};
+	int w{}, h{}, channels{}, bitI{}, stringI{};
+	vector<bool> decoded;
+	unsigned char* imgE = stbi_load(eFilename.c_str(), &w, &h, &channels, 3);
+	out << "Loading image '" << eFilename << "'...";
+	if (imgE == nullptr)
+	{
+		out << "\nFailed to load image, exiting.";
+		exit(1);
+	}
+	out << "\nLoaded image.\n";
+	if (!checkEx(oFilename))InvalidInputMessage("");
+	unsigned char* imgO = stbi_load(oFilename.c_str(), &w, &h, &channels, 3);
+	if (imgO == nullptr)
+	{
+		out << "\nFailed to load image, exiting.";
+		exit(1);
+	}
+	out << "\nLoaded image.\n";
+	//Pre Processing
+	filename = ReadFilenameFromImageC(imgO, imgE, bitI, stringI, out);
+	out << "Filename:" << filename << endl;
+	//Actual Processing
+	ReadDataFromImageC(imgO, imgE, (w * h * channels), bitI, stringI, decoded, out);
+	if (decoded.size() < 5000)
+	{
+		out << "Read following binary:";
+		for (bool i : decoded)
+		{
+			if (i == false)out << "0";
+			if (i == true)cout << "1";
+		}
+	}
+	out << "\nWhich in ascci is:\n" << BitsToAscii(decoded) << endl;
+	out << "Writing to file:'" << filename << "'..." << endl;
+	WriteBitsToFile(filename, decoded);
+	out << "Finished writing.\nFreeing memory..." << endl;
+	stbi_image_free(imgO);
+	stbi_image_free(imgE);
+	out << "Finished";
 }
 
 bool EncodeFolder(const string& ofoldername, ostream& out)
@@ -294,7 +370,7 @@ bool EncodeFolder(const string& ofoldername, ostream& out)
 	}
 	cout << "Enter Filename(Files Bigger then 1GB might cause issues due to RAM overload):";
 	cin >> placeholder;
-	if (!checkEx(placeholder))invalidInputMessage("");
+	if (!checkEx(placeholder))InvalidInputMessage("");
 	string s = ReadFileToBString(placeholder);
 	inputSize = s.size();
 	out << "Size of text:" << inputSize << endl;
@@ -323,13 +399,13 @@ bool EncodeFolder(const string& ofoldername, ostream& out)
 		out << "Loading:" << fullPath << endl;
 		unsigned char* img = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
 		sChunk = s.substr(0, (w * h * channels));
-		out << "Selected Chunk size:" << sChunk.length()<<endl;
+		out << "Selected Chunk size:" << sChunk.length() << endl;
 		out << "Encoding..." << endl;
 		bitI = 0;
 		stringI = 0;
 		WriteToImage(img, (w * h * channels), sChunk, out, bitI, stringI);
 		s.erase(0, stringI);
-		out << "Encoded Chunck size:" << stringI<<endl;
+		out << "Encoded Chunck size:" << stringI << endl;
 		out << "Writing file..." << endl;
 		fullPath = efoldername + "\\" + FileList[i].insert(FileList[i].length() - 4, 1, 'M');
 		out << "Writing to:" << fullPath << endl;
@@ -337,7 +413,7 @@ bool EncodeFolder(const string& ofoldername, ostream& out)
 		stbi_image_free(img);
 	}
 	cout << "Finished encoding, would you like to delete the following (not encoded) Files (Y/N):" << endl;
-	for (size_t i = NIL; i < FileList.size()+1 -NIL; i++)
+	for (size_t i = NIL; i < FileList.size() + 1 - NIL; i++)
 	{
 		fullPath = ofoldername + "\\" + FileList[i];
 		cout << fullPath << endl;
@@ -345,12 +421,13 @@ bool EncodeFolder(const string& ofoldername, ostream& out)
 	cin >> placeholder;
 	if (placeholder == "Y")
 	{
-		for (size_t i = NIL; i < FileList.size()+1 - NIL; i++)
+		for (size_t i = NIL; i < FileList.size() + 1 - NIL; i++)
 		{
 			fullPath = ofoldername + "\\" + FileList[i];
 			remove(fullPath.c_str());
 		}
 	}
+	stbi_image_free(img);
 	out << "Finished!" << endl;
 	return 0;
 }

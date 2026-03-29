@@ -38,4 +38,5 @@ extern bool DecodeImage(const string& eFilename, ostream& out);
 extern bool DecodeFolder(const string& eFoldername, ostream& out);
 extern bool createFolder(const string& name);
 extern bool checkEx(const string& path);
-extern void invalidInputMessage(const string& details);
+extern void InvalidInputMessage(const string& details = "[No Details]");
+extern void EncodeImageNI(const string& ifilename, const string& cfilename, ostream& out);
