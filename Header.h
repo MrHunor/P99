@@ -1,6 +1,10 @@
 #pragma once
 #include <iostream>
-using namespace std;
+#include <vector>
+
+using std::string;
+using std::vector;
+using std::ostream;
 
 // A stream buffer that does nothing
 class NullBuffer : public std::streambuf {
@@ -33,3 +37,5 @@ extern bool EncodeImage(const string& filename, ostream& out);
 extern bool DecodeImage(const string& eFilename, ostream& out);
 extern bool DecodeFolder(const string& eFoldername, ostream& out);
 extern bool createFolder(const string& name);
+extern bool checkEx(const string& path);
+extern void invalidInputMessage(const string& details);

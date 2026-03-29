@@ -3,18 +3,44 @@
 #include <string>
 #include <bitset>
 #include <vector>
-#include <cstring>
 #include <fstream>
 #include <filesystem>
 #include <stb_image.h>
 #include <stb_image_write.h>
+#include <stdexcept>  
+#include <cstdint>    
 #include "Header.h"
-using namespace std;
+
 namespace fs = std::filesystem;
+
+using std::string;
+using std::vector;
+using std::cout;
+using std::cin;
+using std::endl;
+using std::ostream;
+
+void invalidInputMessage(const string& details)
+{
+	cout << "Your Input was Invalid:" << details;
+	exit(1);
+}
 
 bool createFolder(const string& name)
 {
 	if (std::filesystem::create_directory(name)) {
+		return 0;
+	}
+	else {
+		return 1;
+	}
+}
+
+bool checkEx(const string& path)
+{
+	fs::path filePath = "example.txt";
+
+	if (fs::exists(filePath)) {
 		return 0;
 	}
 	else {
@@ -125,6 +151,7 @@ bool DecodeFolder(const string& eFoldername, ostream& out)
 
 	cout << "Enter Original Foldername:";
 	cin >> oFoldername;
+	if (!checkEx(oFoldername))invalidInputMessage("");
 	eFileList = GetFilenamesFromFolder(eFoldername);
 	oFileList = GetFilenamesFromFolder(oFoldername);
 	if (CheckFilelists(oFileList, eFileList) != 0)
@@ -186,6 +213,7 @@ bool DecodeImage(const string& eFilename, ostream& out)
 	out << "\nLoaded image.\n";
 	cout << "Enter Original Filename:";
 	cin >> placeholder;
+	if (!checkEx(placeholder))invalidInputMessage("");
 	unsigned char* imgC = stbi_load(placeholder.c_str(), &w, &h, &channels, 3);
 	if (imgC == nullptr)
 	{
@@ -229,6 +257,7 @@ bool EncodeImage(const string& filename, ostream& out)
 	}
 	cout << "Enter Filename:";
 	cin >> placeholder;
+	if (!checkEx(placeholder))invalidInputMessage("");
 	string s = ReadFileToBString(placeholder);
 	out << "\nRaw Binary:" << s << endl;
 	out << "Size of text:" << s.length() << endl;
@@ -265,6 +294,7 @@ bool EncodeFolder(const string& ofoldername, ostream& out)
 	}
 	cout << "Enter Filename(Files Bigger then 1GB might cause issues due to RAM overload):";
 	cin >> placeholder;
+	if (!checkEx(placeholder))invalidInputMessage("");
 	string s = ReadFileToBString(placeholder);
 	inputSize = s.size();
 	out << "Size of text:" << inputSize << endl;
@@ -287,23 +317,39 @@ bool EncodeFolder(const string& ofoldername, ostream& out)
 	out << "Encoding...";
 	for (size_t i = 0; i < NIL; i++)
 	{
+		cout << "i:" << i;
 		out << "Loading image '" << FileList[i] << "'..\n";
 		fullPath = ofoldername + "\\" + FileList[i];
 		out << "Loading:" << fullPath << endl;
 		unsigned char* img = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
 		sChunk = s.substr(0, (w * h * channels));
-		out << "Selected Chunk size:" << sChunk.length();
+		out << "Selected Chunk size:" << sChunk.length()<<endl;
 		out << "Encoding..." << endl;
 		bitI = 0;
 		stringI = 0;
 		WriteToImage(img, (w * h * channels), sChunk, out, bitI, stringI);
 		s.erase(0, stringI);
-		out << "Encoded Chunck size:" << stringI;
+		out << "Encoded Chunck size:" << stringI<<endl;
 		out << "Writing file..." << endl;
 		fullPath = efoldername + "\\" + FileList[i].insert(FileList[i].length() - 4, 1, 'M');
 		out << "Writing to:" << fullPath << endl;
 		stbi_write_png(fullPath.c_str(), w, h, channels, img, channels * w);
 		stbi_image_free(img);
+	}
+	cout << "Finished encoding, would you like to delete the following (not encoded) Files (Y/N):" << endl;
+	for (size_t i = NIL; i < FileList.size()+1 -NIL; i++)
+	{
+		fullPath = ofoldername + "\\" + FileList[i];
+		cout << fullPath << endl;
+	}
+	cin >> placeholder;
+	if (placeholder == "Y")
+	{
+		for (size_t i = NIL; i < FileList.size()+1 - NIL; i++)
+		{
+			fullPath = ofoldername + "\\" + FileList[i];
+			remove(fullPath.c_str());
+		}
 	}
 	out << "Finished!" << endl;
 	return 0;
