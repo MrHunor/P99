@@ -63,7 +63,7 @@ bool CheckFilelists(const vector<string>& FileList1, const vector<string>& FileL
 
 /* =========================================================2. BIT / FILE UTILITIES========================================================= */
 
-string TextToAsciiB(string s)
+string TextToAsciiB(const string& s)
 {
 	string asciiS;
 	for (char c : s) {
@@ -97,19 +97,24 @@ string BitsToAscii(const vector<bool>& bits)
 	return result;
 }
 
-string ReadFileToBString(const string& filename)
+void ReadFileToArray(const std::string& filename, std::vector<bool>& array)
 {
 	std::ifstream file(filename, std::ios::binary);
+	if (!file)
+		throw std::runtime_error("Failed to open file");
 
 	file.seekg(0, std::ios::end);
 	size_t size = file.tellg();
 	file.seekg(0, std::ios::beg);
 
-	std::string buffer(size, '\0');
-	file.read(buffer.data(), size);
-	buffer.insert(0, filename + '|');
+	// resize the vector to fit the file
+	array.resize(size);
 
-	return TextToAsciiB(buffer);
+	std::vector<char> buffer(size);
+	file.read(buffer.data(), size);
+
+	for (size_t i = 0; i < size; i++)
+		array[i] = (buffer[i] != 0);
 }
 
 void WriteBitsToFile(const std::string& filename, const std::vector<bool>& bits)
@@ -138,9 +143,9 @@ void WriteBitsToFile(const std::string& filename, const std::vector<bool>& bits)
 
 /* =========================================================3. LOW-LEVEL IMAGE LOGIC========================================================= */
 
-bool WriteToImage(unsigned char* img, size_t imgSize, const string& s, ostream& out, int& bitI, int& stringI)
+bool WriteToImage(unsigned char* img, size_t imgSize, const vector<bool>& s, ostream& out, int& bitI, int& stringI)
 {
-	auto sLength = s.length();
+	auto sLength = s.size();
 	while (stringI < sLength)
 	{
 		if (bitI > imgSize) return 1;
@@ -236,7 +241,7 @@ bool EncodeImage(const string& filename, ostream& out)
 {
 	string placeholder{};
 	int w{}, h{}, channels{}, imgSize{}, bitI{}, stringI{};
-
+	vector<bool> array;
 	out << "\nLoading image '" << filename << "'...\n";
 	unsigned char* img = stbi_load(filename.c_str(), &w, &h, &channels, 3);
 	imgSize = w * h * 4;
@@ -247,15 +252,16 @@ bool EncodeImage(const string& filename, ostream& out)
 	cin >> placeholder;
 	if (checkEx(placeholder)) InvalidInputMessage("");
 
-	string s = ReadFileToBString(placeholder);
+	ReadFileToArray(placeholder, array);
 
-	if (s.length() > imgSize)
+	if (array.size() > imgSize)
 	{
+		InvalidInputMessage("Given File is too big to encode. Encoding File size=" + std::to_string(array.size()) + "; imageSize" + std::to_string(imgSize));
 		stbi_image_free(img);
 		return 1;
 	}
 
-	WriteToImage(img, imgSize, s, out, bitI, stringI);
+	WriteToImage(img, imgSize, array, out, bitI, stringI);
 
 	stbi_write_png("output.png", w, h, 4, img, 4 * w);
 	stbi_image_free(img);
@@ -293,20 +299,18 @@ bool DecodeImage(const string& eFilename, ostream& out)
 bool EncodeFolder(const string& ofoldername, ostream& out)
 {
 	vector<string> FileList = GetFilenamesFromFolder(ofoldername);
-	string placeholder{}, fullPath{}, sChunk{}, efoldername{};
+	vector<bool> array,aChunk;
+	string placeholder{}, fullPath{}, efoldername{};
 	size_t inputSize{};
 	int w{}, h{}, channels{}, bitcounter{}, NIL{}, bitI{}, stringI{};
 
 	efoldername = ofoldername + "M";
 	createFolder(efoldername);
 
-	cout << "Enter Filename:";
+	cout << "Enter Encoding Filename:";
 	cin >> placeholder;
 	if (checkEx(placeholder)) InvalidInputMessage("");
-
-	string s = ReadFileToBString(placeholder);
-	inputSize = s.size();
-
+	ReadFileToArray(placeholder, array);
 	for (int i = 1; bitcounter < inputSize; i++)
 	{
 		if (i > FileList.size() - 1) return 1;
@@ -323,13 +327,13 @@ bool EncodeFolder(const string& ofoldername, ostream& out)
 		fullPath = ofoldername + "\\" + FileList[i];
 		unsigned char* img = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
 
-		sChunk = s.substr(0, (w * h * channels));
+		aChunk.assign(array.begin(), array.begin() + (w * h * channels));
 
 		bitI = 0;
 		stringI = 0;
 
-		WriteToImage(img, (w * h * channels), sChunk, out, bitI, stringI);
-		s.erase(0, stringI);
+		WriteToImage(img, (w * h * channels), aChunk, out, bitI, stringI);
+		array.erase(array.begin(), array.begin()+stringI);
 
 		fullPath = efoldername + "\\" + FileList[i].insert(FileList[i].length() - 4, 1, 'M');
 		stbi_write_png(fullPath.c_str(), w, h, channels, img, channels * w);

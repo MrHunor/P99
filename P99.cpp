@@ -15,7 +15,7 @@ using std::cout;
 using std::endl;
 using std::cin;
 
-finish argv
+//finish improve performace,finish argv
 int main(int argc, char* argv[])
 {
 	string placeholder;
