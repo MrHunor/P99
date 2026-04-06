@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 				else
 					EncodeImage(placeholder, *out);
 			}
-			else InvalidInputMessage();
+			else InvalidInputMessage("Your input is neiter a File nor a folder");
 		}
 		else if (placeholder == "D")
 		{
@@ -108,4 +108,5 @@ int main(int argc, char* argv[])
 		}
 		InvalidInputMessage();
 	}
+	cout << "Finished";
 }

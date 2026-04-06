@@ -27,7 +27,7 @@ private:
 //Functions in header.cpp
 extern string TextToAsciiB(const string& s);
 extern string BitsToAscii(const std::vector<bool>& bits);
-extern void ReadFileToArray(const std::string& filename, bool array[], size_t maxSize);
+extern void ReadFileToArray(const std::string& filename, std::vector<bool>& array);
 extern bool WriteToImage(unsigned char* img, size_t imgSize, const vector<bool>& s, ostream& out, int& bitI, int& stringI);
 extern void WriteBitsToFile(const std::string& filename, const std::vector<bool>& bits);
 extern string ReadFilenameFromImageC(unsigned char* imgC, unsigned char* imgR, int& bitI, int& stringI, ostream& out);
@@ -44,4 +44,4 @@ extern void EncodeImageNI(const string& ifilename, const string& cfilename, ostr
 extern void DecodeImageNI(const string& oFilename, const string& eFilename, ostream& out);
 extern void EncodeFolderNI(const string& ofoldername, const string& cfilename, ostream& out);
 extern void DecodeFolder(const string& oFoldername, const string& eFoldername, ostream& out);
-extern int ReadbSizeFromFile(const string& filename);
+extern std::uintmax_t ReadbSizeFromFile(const std::string& filename);
