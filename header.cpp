@@ -34,10 +34,9 @@ bool createFolder(const string& name)
 	return !fs::create_directory(name);
 }
 
-bool checkEx(const string& path)
+bool checkEx(const std::string& path)
 {
-	fs::path filePath = path; // FIXED
-	return fs::exists(filePath);
+	return fs::exists(path);
 }
 
 vector<string> GetFilenamesFromFolder(string path)
@@ -64,14 +63,19 @@ bool CheckFilelists(const vector<string>& FileList1, const vector<string>& FileL
 
 /* =========================================================2. BIT / FILE UTILITIES========================================================= */
 
-string TextToAsciiB(const string& s)
+std::vector<bool> TextToAsciiB(const std::string& s)
 {
-	string asciiS;
-	for (char c : s) {
+	std::vector<bool> result;
+	result.reserve(s.size() * 8);
+
+	for (unsigned char c : s) {
 		std::bitset<8> b(c);
-		asciiS += b.to_string();
+		for (int i = 7; i >= 0; --i) {
+			result.push_back(b[i]);
+		}
 	}
-	return asciiS;
+
+	return result;
 }
 
 string BitsToAscii(const vector<bool>& bits)
@@ -100,22 +104,42 @@ string BitsToAscii(const vector<bool>& bits)
 
 void ReadFileToArray(const std::string& filename, std::vector<bool>& array)
 {
+	//No idea how this work
+	// --- Read file safely ---
 	std::ifstream file(filename, std::ios::binary);
 	if (!file)
 		throw std::runtime_error("Failed to open file");
 
 	file.seekg(0, std::ios::end);
-	size_t size = file.tellg();
+	std::streampos end = file.tellg();
+	if (end < 0)
+		throw std::runtime_error("tellg() failed");
+
+	size_t size = static_cast<size_t>(end);
 	file.seekg(0, std::ios::beg);
 
-	// resize the vector to fit the file
-	array.resize(size);
-
 	std::vector<char> buffer(size);
-	file.read(buffer.data(), size);
+	if (!file.read(buffer.data(), size))
+		throw std::runtime_error("Failed to read file");
 
-	for (size_t i = 0; i < size; i++)
-		array[i] = (buffer[i] != 0);
+	// --- Prepare metadata ---
+	std::vector<bool> header = TextToAsciiB(filename + "|");
+
+	// --- Build final result cleanly ---
+	array.clear();
+	array.reserve(header.size() + size);
+
+	// insert header first
+	array.insert(array.end(), header.begin(), header.end());
+
+	// then append file data
+	for (unsigned char c : buffer)
+	{
+		for (int bit = 7; bit >= 0; --bit)
+		{
+			array.push_back((c >> bit) & 1);
+		}
+	}
 }
 
 void WriteBitsToFile(const std::string& filename, const std::vector<bool>& bits)
@@ -152,16 +176,16 @@ bool WriteToImage(unsigned char* img, size_t imgSize, const vector<bool>& s, ost
 	auto sLength = s.size();
 	while (stringI < sLength)
 	{
-		if (bitI > imgSize) return 1;
+		if (bitI >= imgSize) return 1;
 
 		if (img[bitI] > 0 && img[bitI] < 255)
 		{
-			if (s[stringI] == '0')
+			if (s[stringI] == 0)
 			{
 				img[bitI]--;
 				stringI++;
 			}
-			else if (s[stringI] == '1')
+			else if (s[stringI] == 1)
 			{
 				img[bitI]++;
 				stringI++;
@@ -206,6 +230,9 @@ string ReadFilenameFromImageC(unsigned char* imgC, unsigned char* imgR, int& bit
 
 	while (!end)
 	{
+		out << "BitI:" << bitI endo;
+		out << "StringI" << stringI endo;
+		out << "Decoded size" << decoded.size() endo;
 		if (imgC[bitI] > 0 && imgC[bitI] < 255)
 		{
 			if (imgR[bitI] == imgC[bitI] - 1)
@@ -251,12 +278,10 @@ bool EncodeImage(const string& filename, ostream& out)
 	imgSize = w * h * 3;
 
 	if (!img) return 1;
-
 	cout << "Enter the containing Filename:";
 	cin >> placeholder;
-	if (!checkEx(placeholder)) InvalidInputMessage("This file does not exist");
+	if (!checkEx(placeholder))InvalidInputMessage("This file does not exist");
 	out << "Reserving array for Size:" << ReadbSizeFromFile(placeholder) << endl;
-	array.reserve(ReadbSizeFromFile(placeholder));
 	ReadFileToArray(placeholder, array);
 
 	if (array.size() > imgSize)
@@ -266,6 +291,7 @@ bool EncodeImage(const string& filename, ostream& out)
 		return 1;
 	}
 	out << "Writing to Image (Memory)..." endo;
+	out << "ARRAY Size:" << array.size() << "bit/" << array.size() / 8 << "Bytes" endo;
 	WriteToImage(img, imgSize, array, out, bitI, stringI);
 	out << "Writing to Image (Disk)..." endo;
 	stbi_write_png("output.png", w, h, 3, img, 3 * w);
@@ -291,6 +317,8 @@ bool DecodeImage(const string& eFilename, ostream& out)
 	if (!imgC) return 1;
 
 	Filename = ReadFilenameFromImageC(imgC, imgR, bitI, stringI, out);
+	out << "Read Filename:" << Filename endo;
+	out << "Channels:" <<  channels endo;
 	ReadDataFromImageC(imgC, imgR, (w * h * channels), bitI, stringI, decoded, out);
 
 	WriteBitsToFile(Filename, decoded);
@@ -319,6 +347,7 @@ bool EncodeFolder(const string& ofoldername, ostream& out)
 	out << "Reserving array for Size:" << ReadbSizeFromFile(placeholder) << endl;
 	array.reserve(ReadbSizeFromFile(placeholder));
 	ReadFileToArray(placeholder, array);
+	out << "ARRAY Size:" << array.size() << "bit/" << array.size() / 8 << "Bytes" endo;
 	for (int i = 1; bitcounter < inputSize; i++)
 	{
 		if (i > FileList.size() - 1) return 1;
@@ -329,24 +358,26 @@ bool EncodeFolder(const string& ofoldername, ostream& out)
 		bitcounter += (w * h * channels);
 		NIL = i;
 	}
-
+	out << "Expected NIL" << NIL << "/" << FileList.size() endo;
 	for (size_t i = 0; i < NIL; i++)
 	{
 		fullPath = ofoldername + "\\" + FileList[i];
 		unsigned char* img = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
-
+		out << "Assigning Chunk of Size:" << (w * h * channels);
 		aChunk.assign(array.begin(), array.begin() + (w * h * channels));
 
 		bitI = 0;
 		stringI = 0;
-
+		out << "Writing to Image (Memory)..." endo;
 		WriteToImage(img, (w * h * channels), aChunk, out, bitI, stringI);
 		array.erase(array.begin(), array.begin() + stringI);
 
 		fullPath = efoldername + "\\" + FileList[i].insert(FileList[i].length() - 4, 1, 'M');
+		out << "Writing to Image (Disk)..." endo;
 		stbi_write_png(fullPath.c_str(), w, h, channels, img, channels * w);
-
+		out << "Freeing Memory..." endo;
 		stbi_image_free(img);
+		
 	}
 
 	return 0;
