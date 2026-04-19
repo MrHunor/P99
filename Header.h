@@ -27,7 +27,7 @@ private:
 //Functions in header.cpp
 extern std::vector<bool> TextToAsciiB(const std::string& s);
 extern string BitsToAscii(const std::vector<bool>& bits);
-extern void ReadFileToArray(const std::string& filename, std::vector<bool>& array);
+extern void ReadFileToArray(const std::string& filename, std::vector<bool>& array, ostream& out);
 extern bool WriteToImage(unsigned char* img, size_t imgSize, const vector<bool>& s, ostream& out, int& bitI, int& stringI);
 extern void WriteBitsToFile(const std::string& filename, const std::vector<bool>& bits);
 extern string ReadFilenameFromImageC(unsigned char* imgC, unsigned char* imgR, int& bitI, int& stringI, ostream& out);

@@ -14,7 +14,7 @@
 using std::cout;
 using std::endl;
 using std::cin;
-
+xxx fix that originalFM does not look same as originalF, also last image is dropped somehow
 //finish improve performace,finish argv
 int main(int argc, char* argv[])
 {
