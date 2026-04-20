@@ -1,5 +1,6 @@
 #pragma warning(disable : 4996)
 #define endo <<endl
+#define ts std::to_string
 #include <iostream>
 #include <string>
 #include <bitset>
@@ -39,27 +40,41 @@ bool checkEx(const std::string& path)
 	return fs::exists(path);
 }
 
+
 vector<string> GetFilenamesFromFolder(string path)
 {
 	vector<string> PathV;
 	for (const auto& entry : fs::directory_iterator(path)) {
 		PathV.push_back(entry.path().filename().string());
 	}
+	cout << "Unsorted Vector:\n";
+	for (auto e : PathV)
+	{
+		cout << e endo;
+	}
 	std::sort(PathV.begin(), PathV.end());
+	cout << "Sorted Vector:\n";
+	for (auto e : PathV)
+	{
+		cout << e endo;
+	}
 	return PathV;
 }
 
-bool CheckFilelists(const vector<string>& FileList1, const vector<string>& FileList2)
+void CheckFilelists(const vector<string>& FileList1, const vector<string>& FileList2, ostream& out)
 {
-	if (FileList1.size() != FileList2.size()) return true;
+	if (FileList1.size() != FileList2.size()) InvalidInputMessage("Filelist size mismatch.");xxxx print filelists and recommend ation
 
 	for (size_t i = 0; i < FileList1.size(); i++)
 	{
 		string modified = FileList1[i];
 		modified.insert(modified.length() - 4, 1, 'M');
-		if (modified != FileList2[i]) return true;
+		if (modified != FileList2[i])
+		{
+			InvalidInputMessage("A Filelist Item does not match its pair. Details:\nN(Null Initialised):" + ts(i) + "\nName in Filelist 1:" + FileList1[i] + "Name in Filelist 2:" + FileList2[i]);
+		}
 	}
-	return false;
+
 }
 
 /* =========================================================2. BIT / FILE UTILITIES========================================================= */

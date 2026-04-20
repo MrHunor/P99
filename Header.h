@@ -32,6 +32,7 @@ extern bool WriteToImage(unsigned char* img, size_t imgSize, const vector<bool>&
 extern void WriteBitsToFile(const std::string& filename, const std::vector<bool>& bits);
 extern string ReadFilenameFromImageC(unsigned char* imgC, unsigned char* imgR, int& bitI, int& stringI, ostream& out);
 extern void ReadDataFromImageC(unsigned char* imgC, unsigned char* imgR, int size, int& bitI, int& stringI, vector<bool>& decoded, ostream& out);
+//This effectivly is CreateFilelist()
 extern vector<string> GetFilenamesFromFolder(string path);
 extern bool EncodeFolder(const string& foldername, ostream& out);
 extern bool EncodeImage(const string& filename, ostream& out);
@@ -45,3 +46,4 @@ extern void DecodeImageNI(const string& oFilename, const string& eFilename, ostr
 extern void EncodeFolderNI(const string& ofoldername, const string& cfilename, ostream& out);
 extern void DecodeFolder(const string& oFoldername, const string& eFoldername, ostream& out);
 extern std::uintmax_t ReadbSizeFromFile(const std::string& filename);
+extern void CheckFilelists(const vector<string>& FileList1, const vector<string>& FileList2, ostream& out);
