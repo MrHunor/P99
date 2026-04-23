@@ -47,3 +47,4 @@ extern void EncodeFolderNI(const string& ofoldername, const string& cfilename, o
 extern void DecodeFolder(const string& oFoldername, const string& eFoldername, ostream& out);
 extern std::uintmax_t ReadbSizeFromFile(const std::string& filename);
 extern void CheckFilelists(const vector<string>& FileList1, const vector<string>& FileList2, ostream& out);
+extern void ReccomendActionFilelistMismatch(const vector<string>& FileList1ORIGINAL, const vector<string>& FileList2ORIGINAL, ostream& out);

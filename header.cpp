@@ -52,7 +52,14 @@ vector<string> GetFilenamesFromFolder(string path)
 	{
 		cout << e endo;
 	}
-	std::sort(PathV.begin(), PathV.end());
+	std::sort(PathV.begin(), PathV.end(), [](const std::string& a, const std::string& b) {
+		auto getNumber = [](const std::string& s) {
+			size_t pos = 0;
+			while (pos < s.size() && isdigit(s[pos])) pos++;
+			return std::stoi(s.substr(0, pos));
+			};
+		return getNumber(a) < getNumber(b);
+		});
 	cout << "Sorted Vector:\n";
 	for (auto e : PathV)
 	{
@@ -60,17 +67,54 @@ vector<string> GetFilenamesFromFolder(string path)
 	}
 	return PathV;
 }
-
-void CheckFilelists(const vector<string>& FileList1, const vector<string>& FileList2, ostream& out)
+void ReccomendActionFilelistMismatch(const vector<string>& FileList1ORIGINAL, const vector<string>& FileList2ORIGINAL, ostream& out)
 {
-	if (FileList1.size() != FileList2.size()) InvalidInputMessage("Filelist size mismatch.");xxxx print filelists and recommend ation
-
+	vector<string> FileList1 = FileList1ORIGINAL;
+	vector<string> FileList2 = FileList2ORIGINAL;
+	out << "Size Diffrence:\nFilelist1:" << FileList1.size() << "\nFilelist2:" << FileList2.size() endo;
 	for (size_t i = 0; i < FileList1.size(); i++)
 	{
+		for (size_t z = 0; z < FileList2.size(); z++)
+		{
+			string modified = FileList1[i];
+			modified.insert(modified.length() - 4, 1, 'M');
+			if (modified == FileList2[z])
+			{
+				FileList1.erase(FileList1.begin() + i);
+				FileList2.erase(FileList2.begin() + z);
+
+				--i;        // re-check new element at i
+				break;      // stop using z, it's now invalid context
+			}
+		}
+	}
+	out << "Following images were NOT found:\nFilelist1:";
+	for (auto i : FileList1)
+	{
+		out << i endo;
+	}
+	out << "Filelist2:";
+	for (auto i : FileList2)
+	{
+		out << i endo;
+	}
+	
+}
+void CheckFilelists(const vector<string>& FileList1, const vector<string>& FileList2, ostream& out)
+{
+	if (FileList1.size() != FileList2.size())
+	{
+		ReccomendActionFilelistMismatch(FileList1, FileList2, out);
+		InvalidInputMessage("Filelist size mismatch.");
+	}
+	for (size_t i = 0; i < FileList1.size(); i++)
+	{
+		out << "Current mapping:Filelist1:" << FileList1[i] << "->" << FileList2[i];
 		string modified = FileList1[i];
 		modified.insert(modified.length() - 4, 1, 'M');
 		if (modified != FileList2[i])
 		{
+			ReccomendActionFilelistMismatch(FileList1, FileList2, out);
 			InvalidInputMessage("A Filelist Item does not match its pair. Details:\nN(Null Initialised):" + ts(i) + "\nName in Filelist 1:" + FileList1[i] + "Name in Filelist 2:" + FileList2[i]);
 		}
 	}
@@ -361,7 +405,7 @@ bool EncodeFolder(const string& ofoldername, ostream& out)
 	createFolder(efoldername);
 	cout << "Enter Encoding Filename:";
 	cin >> placeholder;
-	if (!checkEx(placeholder)) InvalidInputMessage("");
+	if (!checkEx(placeholder)) InvalidInputMessage("The File you specified does not exist or could not be found");
 
 	ReadFileToArray(placeholder, array,out);
 	inputSize = array.size();
@@ -428,7 +472,7 @@ bool DecodeFolder(const string& eFoldername, ostream& out)
 	eFileList = GetFilenamesFromFolder(eFoldername);
 	oFileList = GetFilenamesFromFolder(oFoldername);
 
-	if (CheckFilelists(oFileList, eFileList))InvalidInputMessage("Filelists dont match");
+	CheckFilelists(oFileList, eFileList,out);
 
 	fullPath = oFoldername + "\\" + oFileList[0];
 	imgO = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
@@ -576,7 +620,7 @@ void DecodeFolder(const string& oFoldername, const string& eFoldername, ostream&
 	eFileList = GetFilenamesFromFolder(eFoldername);
 	oFileList = GetFilenamesFromFolder(oFoldername);
 
-	if (CheckFilelists(oFileList, eFileList)) InvalidInputMessage("Filelists Mismatch");
+	CheckFilelists(oFileList, eFileList,out);
 
 	fullPath = oFoldername + "\\" + oFileList[0];
 	imgO = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
