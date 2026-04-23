@@ -1,5 +1,5 @@
 #pragma warning(disable : 4996)
-#define endo <<endl
+#define endo <<"\n"
 #define ts std::to_string
 #include <iostream>
 #include <string>
@@ -109,7 +109,7 @@ void CheckFilelists(const vector<string>& FileList1, const vector<string>& FileL
 	}
 	for (size_t i = 0; i < FileList1.size(); i++)
 	{
-		out << "Current mapping:Filelist1:" << FileList1[i] << "->" << FileList2[i];
+		out << "Current mapping:Filelist1:" << FileList1[i] << "->" << FileList2[i] endo;
 		string modified = FileList1[i];
 		modified.insert(modified.length() - 4, 1, 'M');
 		if (modified != FileList2[i])
@@ -189,7 +189,7 @@ void ReadFileToArray(const std::string& filename, std::vector<bool>& array, ostr
 	array.clear();
 	out << "Reserving array for Size:" << header.size()+size << endl;
 	array.reserve(header.size() + size);
-
+	out << "Reserving finished" endo;
 	// insert header first
 	array.insert(array.end(), header.begin(), header.end());
 

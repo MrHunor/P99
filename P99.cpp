@@ -14,8 +14,7 @@
 using std::cout;
 using std::endl;
 using std::cin;
-//xxx fix that originalFM does not look same as originalF, also last image is dropped somehow
-//finish improve performace,finish argv
+//a lot of performace upgrades needed argv set on pause
 int main(int argc, char* argv[])
 {
 	string placeholder;
@@ -87,7 +86,7 @@ int main(int argc, char* argv[])
 
 	break;
 	//arg ("console") version
-	default:
+	/*default:
 		if (argv[1] == "E" || argv[1] == "e")
 		{
 			//second arg is file/foldername to encode to
@@ -107,6 +106,8 @@ int main(int argc, char* argv[])
 			return 0;
 		}
 		InvalidInputMessage();
+	*/
 	}
+	
 	cout << "Finished";
 }
