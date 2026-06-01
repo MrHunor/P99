@@ -1,6 +1,6 @@
 #pragma warning(disable : 4996)
 #define endo <<"\n"
-#define ts std::to_string
+#define ts(x) std::to_string(x)
 #include <iostream>
 #include <string>
 #include <bitset>

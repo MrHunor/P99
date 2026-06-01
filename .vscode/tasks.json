@@ -3,18 +3,22 @@
     "tasks": [
         {
             "type": "cppbuild",
-            "label": "C/C++: g++ build active file",
-            "command": "/usr/bin/g++",
+            "label": "C/C++: g++.exe build active file",
+            "command": "C:/msys64/ucrt64/bin/g++.exe",
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
-                "${fileDirname}/*.cpp",  // <-- IMPORTANT: Compiles all your .cpp files together
-                "-I/home/user/libarys/stb", // Tells g++ where to find stb headers
+                "${fileDirname}\\*.cpp",
+                "-IC:/libarys/stb",
                 "-o",
-                "${fileDirname}/main"      // Names the output executable 'main'
+                "${fileDirname}\\main.exe"
             ],
             "options": {
-                "cwd": "${fileDirname}"
+                "cwd": "${fileDirname}",
+                "shell": {
+                    "executable": "powershell.exe",
+                    "args": ["-Command"]
+                }
             },
             "problemMatcher": [
                 "$gcc"
@@ -23,7 +27,7 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "detail": "Compiler: /usr/bin/g++"
+            "detail": "Compiler: C:/msys64/ucrt64/bin/g++.exe"
         }
     ]
 }
