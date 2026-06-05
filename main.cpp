@@ -15,8 +15,11 @@ using std::cout;
 using std::endl;
 using std::cin;
 //a lot of performace upgrades needed argv set on pause
+
+const char* COMPILE_VERSION = "V(" __DATE__ " " __TIME__ ")\n";
 int main(int argc, char* argv[])
 {
+	cout<<"Build Version:"<<COMPILE_VERSION;
 	string placeholder;
 	std::ostream* out = nullptr;
 	std::ofstream file("output.txt");
