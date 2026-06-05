@@ -20,13 +20,20 @@ const char* COMPILE_VERSION = "V(" __DATE__ " " __TIME__ ")\n";
 int main(int argc, char* argv[])
 {
 	cout<<"Build Version:"<<COMPILE_VERSION;
+	
+	
 	string placeholder;
 	std::ostream* out = nullptr;
 	std::ofstream file("output.txt");
 	NullStream nullout;
 
 	stbi_write_png_compression_level = 9;
-
+    cout<<"Display File Treee from current directory for easier File Navigation? (Y/N)" << endl;
+    cin>>placeholder;
+	if(placeholder=="Y")
+	{
+		system("tree");
+	}
 	switch (argc)
 	{
 	case 1:

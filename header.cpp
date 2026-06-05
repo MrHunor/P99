@@ -42,6 +42,7 @@ bool checkEx(const std::string& path)
 
 
 vector<string> GetFilenamesFromFolder(string path)
+
 {
 	vector<string> PathV;
 	for (const auto& entry : fs::directory_iterator(path)) {
@@ -67,6 +68,7 @@ vector<string> GetFilenamesFromFolder(string path)
 	}
 	return PathV;
 }
+
 void ReccomendActionFilelistMismatch(const vector<string>& FileList1ORIGINAL, const vector<string>& FileList2ORIGINAL, ostream& out)
 {
 	vector<string> FileList1 = FileList1ORIGINAL;
@@ -100,6 +102,7 @@ void ReccomendActionFilelistMismatch(const vector<string>& FileList1ORIGINAL, co
 	}
 	
 }
+
 void CheckFilelists(const vector<string>& FileList1, const vector<string>& FileList2, ostream& out)
 {
 	if (FileList1.size() != FileList2.size())
@@ -399,7 +402,7 @@ bool EncodeFolder(const string& ofoldername, ostream& out)
 	vector<bool> array, aChunk;
 	string placeholder{}, fullPath{}, efoldername{};
 	
-	int w{}, inputSize{}, h{}, channels{}, bitcounter{}, NIL{}, bitI{}, stringI{};
+	int w{}, inputSize{}, h{}, channels{}, bitcounter{}, NIL{}, bitI{}, stringI{}, offset{};
 
 	efoldername = ofoldername + "M";
 	createFolder(efoldername);
@@ -415,6 +418,7 @@ bool EncodeFolder(const string& ofoldername, ostream& out)
 	{
 		cout << i endo;
 	}
+	out<<"Calculating NIL..." endo;//NIL = Needed Image Load
 	for(int i = 0; bitcounter < inputSize; i++)
 	{
 
@@ -429,22 +433,19 @@ bool EncodeFolder(const string& ofoldername, ostream& out)
 	out << "Expected NIL" << NIL << "/" << FileList.size() endo;
 	for (size_t i = 0; i < NIL; i++)
 	{
-		out << "Iteration:" << i<<"/"<<NIL endo;
+		out << "Iteration:" << i << "/" << NIL endo;
 		fullPath = ofoldername + "\\" + FileList[i];
 		unsigned char* img = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
 		out << "Assigning Chunk of Size:" << (w * h * channels) endo;
 		int capacity = w * h * channels;
-		int chunkSize = std::min((int)array.size(), capacity);
-
-		aChunk.assign(array.begin(), array.begin() + chunkSize);
-
+		int chunkSize = std::min((int)array.size()-offset, capacity);
+		aChunk.assign(array.begin()+offset, array.begin() + chunkSize+offset);
 		bitI = 0;
 		stringI = 0;
 		out << "Writing to Image (Memory)..." endo;
 		WriteToImage(img, (w * h * channels), aChunk, out, bitI, stringI);
 		out << "Actual Chunk Size:" << stringI endo;
-		array.erase(array.begin(), array.begin() + stringI);
-
+		offset= offset + stringI;
 		fullPath = efoldername + "\\" + FileList[i].insert(FileList[i].length() - 4, 1, 'M');
 		out << "Writing to Image (Disk)..." endo;
 		stbi_write_png(fullPath.c_str(), w, h, channels, img, channels * w);
