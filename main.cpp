@@ -8,6 +8,7 @@
 #include <string>
 #include <fstream>
 #include <cstdio>
+#include <cstring>
 
 #include "header.h"
 
@@ -19,7 +20,7 @@ const char* COMPILE_VERSION = "V(" __DATE__ " " __TIME__ ")\n";
 int main(int argc, char* argv[])
 {
 	cout<<"Build Version:"<<COMPILE_VERSION;
-	
+
 	
 	string placeholder;
 	std::ostream* out = nullptr;
@@ -97,11 +98,17 @@ int main(int argc, char* argv[])
 	break;
 	//arg ("console") version
 	default:
+	/*    
+	for (size_t i = 0; i < argc; i++)
+	    {
+		cout<<"Arg " << i << ":" << argv[i] << endl;
+	    }
+		*/
 		out = &std::cout;
 		file.close();
 		remove("output.txt");
 
-		if (argv[1] == "encode" )
+		if (strcmp(argv[1], "encode") == 0)
 		{
 			//second arg is file/foldername to encode into
 			if (argv[2][strlen(argv[2]) - 4] != '.')
@@ -116,13 +123,26 @@ int main(int argc, char* argv[])
 
 			return 0;
 		}
-		if (argv[1] == "decode" )
+		cout << "DEBUG: Attempting to compare [" << argv[1] << "] with 'decode'" << endl;
+		if (strcmp(argv[1], "decode") == 0)
 		{
+			if (argv[2][strlen(argv[2]) - 4] != '.')
+			{
+				cout<<"Decoding folder with original foldername:"<<argv[2]<<" and modified foldername:"<<argv[3]<<endl;
+			//second argument is the original foldername and third argument is the modified foldername
+			DecodeFolderNI(argv[2],argv[3],*out);
+			}
+			else
+			{
+				cout<<"Decoding file with original filename:"<<argv[2]<<" and encoded filename:"<<argv[3]<<endl;
+				//File
+			}
+
 			return 0;
 		}
 		InvalidInputMessage("Invalid Options");
-	
 	}
+	
 	
 	
 }

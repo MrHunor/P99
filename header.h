@@ -45,7 +45,7 @@ extern void InvalidInputMessage(const string& details = "[No Details]");
 extern void EncodeImageNI(const string& ifilename, const string& cfilename, ostream& out);
 extern void DecodeImageNI(const string& oFilename, const string& eFilename, ostream& out);
 extern void EncodeFolderNI(const string& ifoldername, const string& ffilename, ostream& out);
-extern void DecodeFolder(const string& oFoldername, const string& eFoldername, ostream& out);
+extern void DecodeFolderNI(const string& oFoldername, const string& mFoldername, ostream& out);
 extern std::uintmax_t ReadbSizeFromFile(const std::string& filename);
 extern void CheckFilelists(const vector<string>& FileList1, const vector<string>& FileList2, ostream& out);
 extern void ReccomendActionFilelistMismatch(const vector<string>& FileList1ORIGINAL, const vector<string>& FileList2ORIGINAL, ostream& out);
