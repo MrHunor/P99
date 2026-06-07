@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
 			remove("output.txt");
 		}
 		else {
-			InvalidInputMessage();
+			InvalidInputMessage("Invalid output mode. Please enter V (Verbose), F (Fileoutput), or N (None)");
 			return 0;
 		}
 
@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
 					DecodeImage(placeholder, *out);
 				}
 			}
-			else InvalidInputMessage();
+			else InvalidInputMessage("Encoded file or folder not found");
 		}
 	}
 
