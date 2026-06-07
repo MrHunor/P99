@@ -44,7 +44,7 @@ extern bool checkEx(const string& path);
 extern void InvalidInputMessage(const string& details = "[No Details]");
 extern void EncodeImageNI(const string& ifilename, const string& cfilename, ostream& out);
 extern void DecodeImageNI(const string& oFilename, const string& eFilename, ostream& out);
-extern void EncodeFolderNI(const string& ofoldername, const string& cfilename, ostream& out);
+extern void EncodeFolderNI(const string& ifoldername, const string& ffilename, ostream& out);
 extern void DecodeFolder(const string& oFoldername, const string& eFoldername, ostream& out);
 extern std::uintmax_t ReadbSizeFromFile(const std::string& filename);
 extern void CheckFilelists(const vector<string>& FileList1, const vector<string>& FileList2, ostream& out);

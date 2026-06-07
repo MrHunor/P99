@@ -513,6 +513,8 @@ bool DecodeFolder(const string& eFoldername, ostream& out)
 }
 
 /* =========================================================6. NI VARIANTS========================================================= */
+//i is into and f is from m is modified, o and c /e are old formats which are now depreciated
+
 
 void EncodeImageNI(const string& ofilename, const string& cfilename, ostream& out)
 {
@@ -558,53 +560,64 @@ void DecodeImageNI(const string& oFilename, const string& eFilename, ostream& ou
 	stbi_image_free(imgE);
 }
 
-void EncodeFolderNI(const string& ofoldername, const string& cfilename, ostream& out)
+void EncodeFolderNI(const string& ifoldername, const string& ffilename, ostream& out)
 {
-	vector<string> FileList = GetFilenamesFromFolder(ofoldername);
-	vector<bool> array;
-	vector<bool> aChunk;
-	string  fullPath{}, sChunk{}, efoldername{};
-	size_t inputSize{};
-	int w{}, h{}, channels{}, bitcounter{}, NIL{}, bitI{}, stringI{};
+	vector<string> FileList = GetFilenamesFromFolder(ifoldername);
+	vector<bool> array, aChunk;
+	string placeholder{}, fullPath{}, mfoldername{};
+	
+	int w{}, inputSize{}, h{}, channels{}, bitcounter{}, NIL{}, bitI{}, stringI{}, offset{};
 
-	efoldername = ofoldername + "M";
-	createFolder(efoldername);
+	mfoldername = ifoldername + "M";
+	createFolder(mfoldername);
+	if(!checkEx(ifoldername)) InvalidInputMessage("The Folder you specified does not exist or could not be found");
+	if (!checkEx(ffilename)) InvalidInputMessage("The File you specified does not exist or could not be found");
 
-	if (!checkEx(cfilename)) InvalidInputMessage("");
-	out << "Reserving array for Size:" << ReadbSizeFromFile(cfilename) << endl;
-	array.reserve(ReadbSizeFromFile(cfilename));
-	ReadFileToArray(cfilename, array,out);
+	ReadFileToArray(placeholder, array,out);
 	inputSize = array.size();
-
-	for (int i = 1; bitcounter < inputSize; i++)
+	out << "ARRAY Size:" << array.size() << "bit/" << array.size() / 8 << "Bytes" endo;
+	cout << "Filelist:";
+	for (auto i : FileList)
 	{
-		if (i > FileList.size() - 1)InvalidInputMessage("Availale Images cannot fit the requested file.");
+		cout << i endo;
+	}
+	out<<"Calculating NIL..." endo;//NIL = Needed Image Load
+	for(int i = 0; bitcounter < inputSize; i++)
+	{
 
-		fullPath = ofoldername + "\\" + FileList[i];
+		if (i >= FileList.size()) InvalidInputMessage("Not enough images to store data.\n Bitcounter:"+std::to_string(bitcounter)+".\ninputSize:"+std::to_string(inputSize));
+
+		fullPath = ifoldername + "\\" + FileList[i];
 		stbi_info(fullPath.c_str(), &w, &h, &channels);
 
 		bitcounter += (w * h * channels);
-		NIL = i;
+		NIL = i+1;
 	}
-
+	out << "Expected NIL" << NIL << "/" << FileList.size() endo;
 	for (size_t i = 0; i < NIL; i++)
 	{
-		fullPath = ofoldername + "\\" + FileList[i];
+		out << "Iteration:" << i << "/" << NIL endo;
+		fullPath = ifoldername + "\\" + FileList[i];
 		unsigned char* img = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
-
-		aChunk.assign(array.begin(), array.begin() + (w * h * channels));
-
+		out << "Assigning Chunk of Size:" << (w * h * channels) endo;
+		int capacity = w * h * channels;
+		int chunkSize = std::min((int)array.size()-offset, capacity);
+		aChunk.assign(array.begin()+offset, array.begin() + chunkSize+offset);
 		bitI = 0;
 		stringI = 0;
-
+		out << "Writing to Image (Memory)..." endo;
 		WriteToImage(img, (w * h * channels), aChunk, out, bitI, stringI);
-		array.erase(array.begin(), array.begin() + stringI);
-
-		fullPath = efoldername + "\\" + FileList[i].insert(FileList[i].length() - 4, 1, 'M');
+		out << "Actual Chunk Size:" << stringI endo;
+		offset= offset + stringI;
+		fullPath = mfoldername + "\\" + FileList[i].insert(FileList[i].length() - 4, 1, 'M');
+		out << "Writing to Image (Disk)..." endo;
 		stbi_write_png(fullPath.c_str(), w, h, channels, img, channels * w);
-
+		out << "Freeing Memory..." endo;
 		stbi_image_free(img);
+		
 	}
+
+	
 }
 
 void DecodeFolder(const string& oFoldername, const string& eFoldername, ostream& out)

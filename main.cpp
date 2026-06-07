@@ -14,7 +14,6 @@
 using std::cout;
 using std::endl;
 using std::cin;
-//a lot of performace upgrades needed argv set on pause
 
 const char* COMPILE_VERSION = "V(" __DATE__ " " __TIME__ ")\n";
 int main(int argc, char* argv[])
@@ -28,16 +27,17 @@ int main(int argc, char* argv[])
 	NullStream nullout;
 
 	stbi_write_png_compression_level = 9;
-    cout<<"Display File Treee from current directory for easier File Navigation? (Y/N)" << endl;
+    
+	switch (argc)
+	{
+	case 1:
+	{
+		cout<<"Display File Treee from current directory for easier File Navigation? (Y/N)" << endl;
     cin>>placeholder;
 	if(placeholder=="Y")
 	{
 		system("tree");
 	}
-	switch (argc)
-	{
-	case 1:
-	{
 		cout << "Verbose (V), Fileoutput(F) or None (N):";
 		cin >> placeholder;
 
@@ -96,13 +96,18 @@ int main(int argc, char* argv[])
 
 	break;
 	//arg ("console") version
-	/*default:
-		if (argv[1] == "E" || argv[1] == "e")
+	default:
+		out = &std::cout;
+		file.close();
+		remove("output.txt");
+
+		if (argv[1] == "encode" )
 		{
-			//second arg is file/foldername to encode to
+			//second arg is file/foldername to encode into
 			if (argv[2][strlen(argv[2]) - 4] != '.')
 			{
-				//Folder
+			//third argument is file to encode from 
+			EncodeFolderNI(argv[2],argv[3],*out);
 			}
 			else
 			{
@@ -111,13 +116,13 @@ int main(int argc, char* argv[])
 
 			return 0;
 		}
-		if (argv[1] == "D" || argv[1] == "d")
+		if (argv[1] == "decode" )
 		{
 			return 0;
 		}
-		InvalidInputMessage();
-	*/
+		InvalidInputMessage("Invalid Options");
+	
 	}
 	
-	cout << "Finished";
+	
 }
