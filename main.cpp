@@ -17,6 +17,7 @@ using std::endl;
 using std::cin;
 
 const char* COMPILE_VERSION = "V(" __DATE__ " " __TIME__ ")\n";
+
 int main(int argc, char* argv[])
 {
 	cout<<"Build Version:"<<COMPILE_VERSION;
@@ -33,7 +34,7 @@ int main(int argc, char* argv[])
 	{
 	case 1:
 	{
-		cout<<"Display File Treee from current directory for easier File Navigation? (Y/N)" << endl;
+	cout<<"Display File Treee from current directory for easier File Navigation? (Y/N)" << endl;
     cin>>placeholder;
 	if(placeholder=="Y")
 	{
@@ -70,9 +71,9 @@ int main(int argc, char* argv[])
 			if (checkEx(placeholder))
 			{
 				if (placeholder[placeholder.length() - 4] != '.')
-					EncodeFolder(placeholder, *out);
+					EncodeFolder(placeholder,"", *out);
 				else
-					EncodeImage(placeholder, *out);
+					EncodeImage(placeholder, "",*out);
 			}
 			else InvalidInputMessage("Your input is neiter a File nor a folder");
 		}
@@ -84,11 +85,11 @@ int main(int argc, char* argv[])
 			{
 				if (placeholder[placeholder.length() - 4] != '.')
 				{
-					DecodeFolder(placeholder, *out);
+					DecodeFolder(placeholder,"", *out);
 				}
 				else
 				{
-					DecodeImage(placeholder, *out);
+					DecodeImage(placeholder,"", *out);
 				}
 			}
 			else InvalidInputMessage("The specified file or folder does not exist");
@@ -98,8 +99,8 @@ int main(int argc, char* argv[])
 	break;
 	//arg ("console") version
 	default:
-	/*    
-	for (size_t i = 0; i < argc; i++)
+	    /*    
+	    for (size_t i = 0; i < argc; i++)
 	    {
 		cout<<"Arg " << i << ":" << argv[i] << endl;
 	    }
@@ -108,13 +109,33 @@ int main(int argc, char* argv[])
 		file.close();
 		remove("output.txt");
 
+if(strcmp(argv[1], "--help") == 0)
+{
+	//yes this way ai, i have no social skills
+cout << "\nEncodes data into or decodes data from images and folders.\n\n";
+    cout << "Usage:\n";
+    cout << "    [interactive mode]\n";
+    cout << "    [command] [action] [target] [source/modified]\n\n";
+    cout << "Actions:\n";
+    cout << "    encode    Hides data within a specified image or folder.\n";
+    cout << "    decode    Extracts hidden data from a modified image or folder.\n\n";
+    cout << "Examples:\n";
+    cout << "    encode myfolder\\ outputfolder\\\n";
+    cout << "    decode myfolder\\ outputfolder\\\n\n";
+    cout << "If run with no arguments, the tool starts in interactive menu mode.\n";
+    
+    return 0;
+
+}
+
+
 		if (strcmp(argv[1], "encode") == 0)
 		{
 			//second arg is file/foldername to encode into
 			if (argv[2][strlen(argv[2]) - 4] != '.')
 			{
 			//third argument is file to encode from 
-			EncodeFolderNI(argv[2],argv[3],*out);
+			EncodeFolder(argv[2],argv[3],*out);
 			}
 			else
 			{
@@ -123,14 +144,13 @@ int main(int argc, char* argv[])
 
 			return 0;
 		}
-		cout << "DEBUG: Attempting to compare [" << argv[1] << "] with 'decode'" << endl;
 		if (strcmp(argv[1], "decode") == 0)
 		{
 			if (argv[2][strlen(argv[2]) - 4] != '.')
 			{
 				cout<<"Decoding folder with original foldername:"<<argv[2]<<" and modified foldername:"<<argv[3]<<endl;
 			//second argument is the original foldername and third argument is the modified foldername
-			DecodeFolderNI(argv[2],argv[3],*out);
+			DecodeFolder(argv[2],argv[3],*out);
 			}
 			else
 			{

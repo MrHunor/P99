@@ -11,13 +11,15 @@
                 "${fileDirname}\\*.cpp",
                 "-IC:/libarys/stb",
                 "-o",
-                "${fileDirname}\\main.exe"
+                "${fileDirname}\\main.exe",
+                "-static-libgcc",
+                "-static-libstdc++",
+                "-static"
             ],
             "options": {
                 "cwd": "${fileDirname}",
-                "shell": {
-                    "executable": "powershell.exe",
-                    "args": ["-Command"]
+                "env": {
+                    "PATH": "C:\\msys64\\ucrt64\\bin;${env:PATH}"
                 }
             },
             "problemMatcher": [

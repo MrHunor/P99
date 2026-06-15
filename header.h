@@ -11,41 +11,49 @@ using std::ostream;
 // A stream buffer that does nothing
 class NullBuffer : public std::streambuf {
 public:
-	int overflow(int c) override {
-		return c; // pretend everything was written successfully
-	}
+    int overflow(int c) override {
+        return c; // pretend everything was written successfully
+    }
 };
 
 // A stream that uses the null buffer
 class NullStream : public std::ostream {
 public:
-	NullStream() : std::ostream(&buffer) {}
+    NullStream() : std::ostream(&buffer) {}
 
 private:
-	NullBuffer buffer;
+    NullBuffer buffer;
 };
 
-//Functions in header.cpp
-extern std::vector<bool> TextToAsciiB(const std::string& s);
-extern string BitsToAscii(const std::vector<bool>& bits);
-extern void ReadFileToArray(const std::string& filename, std::vector<bool>& array, ostream& out);
-extern bool WriteToImage(unsigned char* img, size_t imgSize, const vector<bool>& s, ostream& out, int& bitI, int& stringI);
-extern void WriteBitsToFile(const std::string& filename, const std::vector<bool>& bits);
-extern string ReadFilenameFromImageC(unsigned char* imgC, unsigned char* imgR, int& bitI, int& stringI, ostream& out);
-extern void ReadDataFromImageC(unsigned char* imgC, unsigned char* imgR, int size, int& bitI, int& stringI, vector<bool>& decoded, ostream& out);
-//This effectivly is CreateFilelist()
-extern vector<string> GetFilenamesFromFolder(string path);
-extern bool EncodeFolder(const string& foldername, ostream& out);
-extern bool EncodeImage(const string& filename, ostream& out);
-extern bool DecodeImage(const string& eFilename, ostream& out);
-extern bool DecodeFolder(const string& eFoldername, ostream& out);
-extern bool createFolder(const string& name);
-extern bool checkEx(const string& path);
-extern void InvalidInputMessage(const string& details = "[No Details]");
-extern void EncodeImageNI(const string& ifilename, const string& cfilename, ostream& out);
-extern void DecodeImageNI(const string& oFilename, const string& eFilename, ostream& out);
-extern void EncodeFolderNI(const string& ifoldername, const string& ffilename, ostream& out);
-extern void DecodeFolderNI(const string& oFoldername, const string& mFoldername, ostream& out);
-extern std::uintmax_t ReadbSizeFromFile(const std::string& filename);
-extern void CheckFilelists(const vector<string>& FileList1, const vector<string>& FileList2, ostream& out);
-extern void ReccomendActionFilelistMismatch(const vector<string>& FileList1ORIGINAL, const vector<string>& FileList2ORIGINAL, ostream& out);
+/* =========================================================1. BASIC UTILITIES========================================================= */
+
+void InvalidInputMessage(const string& details = "[No Details]");
+bool createFolder(const string& name);
+bool checkEx(const string& path);
+vector<string> GetFilenamesFromFolder(string path);
+void ReccomendActionFilelistMismatch(const vector<string>& FileList1ORIGINAL, const vector<string>& FileList2ORIGINAL, ostream& out);
+void CheckFilelists(const vector<string>& FileList1, const vector<string>& FileList2, ostream& out);
+
+/* =========================================================2. BIT / FILE UTILITIES========================================================= */
+
+std::vector<bool> TextToAsciiB(const std::string& s);
+string BitsToAscii(const vector<bool>& bits);
+void ReadFileToArray(const std::string& filename, std::vector<bool>& array, ostream& out);
+void WriteBitsToFile(const std::string& filename, const std::vector<bool>& bits);
+std::uintmax_t ReadbSizeFromFile(const std::string& filename);
+
+/* =========================================================3. LOW-LEVEL IMAGE LOGIC========================================================= */
+
+bool WriteToImage(unsigned char* img, size_t imgSize, const vector<bool>& s, ostream& out, int& bitI, int& stringI);
+void ReadDataFromImageC(unsigned char* imgC, unsigned char* imgR, int size, int& bitI, int& stringI, vector<bool>& decoded, ostream& out);
+string ReadFilenameFromImageC(unsigned char* imgC, unsigned char* imgR, int& bitI, int& stringI, ostream& out);
+
+/* =========================================================4. IMAGE OPERATIONS========================================================= */
+
+bool EncodeImage(const string& ifilename, const string& ffilename_, ostream& out);
+bool DecodeImage(const string& mFilename, const string& ffilename_, ostream& out);
+
+/* =========================================================5. FOLDER OPERATIONS========================================================= */
+
+bool EncodeFolder(const string& ifoldername, const string& ffilename_, ostream& out);
+bool DecodeFolder(const string& mFoldername, const string& oFoldername_, ostream& out);
