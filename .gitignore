@@ -12,3 +12,6 @@
 
 #testfiles
 testfiles/*
+
+#executable
+*.exe
