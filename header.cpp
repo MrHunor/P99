@@ -194,8 +194,9 @@ void ReadFileToArray(const std::string& filename, std::vector<bool>& array, ostr
 	array.reserve(header.size() + size);
 	out << "Reserving finished" endo;
 	// insert header first
+	out<<"Inserting header..." endo;
 	array.insert(array.end(), header.begin(), header.end());
-
+    out<<"Appending file data..." endo;
 	// then append file data
 	for (unsigned char c : buffer)
 	{
@@ -465,7 +466,7 @@ bool EncodeFolder(const string& ifoldername, const string& ffilename_ ,ostream& 
 	return 0;
 }
 
-bool DecodeFolder(const string& mFoldername, const string& oFoldername_, ostream& out)
+bool DecodeFolder( const string& oFoldername_,const string& mFoldername, ostream& out)
 {
 	unsigned char* imgO{};
 	unsigned char* imgE{};
