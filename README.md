@@ -8,7 +8,7 @@ P99 is a lightweight, command-line tool written in C++ that allows you to hide t
 
 ## Features
 
-*Encode Text: Hide confidential or arbitrary text strings directly within the pixel data of a PNG image.
+ Encode Text: Hide confidential or arbitrary text strings directly within the pixel data of a PNG image.
 
  Decode Text: Extract previously hidden text from a modified PNG image.
 
