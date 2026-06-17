@@ -10,6 +10,7 @@
                 "-g",
                 "${fileDirname}\\*.cpp",
                 "-IC:/libarys/stb",
+                "-IC:/libarys/CLI11",
                 "-o",
                 "${fileDirname}\\main.exe",
                 "-static-libgcc",
