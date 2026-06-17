@@ -1,4 +1,7 @@
 @echo off
+echo This will not currently work 
+pause
+exit /b 1
 setlocal enabledelayedexpansion
 
 echo ============================================
