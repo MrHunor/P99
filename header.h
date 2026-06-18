@@ -56,4 +56,4 @@ bool DecodeImage(const string& mFilename, const string& ffilename_, ostream& out
 /* =========================================================5. FOLDER OPERATIONS========================================================= */
 
 bool EncodeFolder(const string& ifoldername, const string& ffilename_, ostream& out);
-bool DecodeFolder( const string& oFoldername_,const string& mFoldername, ostream& out);
+bool DecodeFolder( const string& mFoldername,const string& fFoldername_, ostream& out);

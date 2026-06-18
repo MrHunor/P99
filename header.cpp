@@ -49,11 +49,12 @@ vector<string> GetFilenamesFromFolder(string path)
 	for (const auto& entry : fs::directory_iterator(path)) {
 		PathV.push_back(entry.path().filename().string());
 	}
-	cout << "Unsorted Vector:\n";
+/*	cout << "Unsorted Vector:\n";
 	for (auto e : PathV)
 	{
 		cout << e endo;
 	}
+		*/
 	std::sort(PathV.begin(), PathV.end(), [](const std::string& a, const std::string& b) {
 		auto getNumber = [](const std::string& s) {
 			size_t pos = 0;
@@ -62,11 +63,13 @@ vector<string> GetFilenamesFromFolder(string path)
 			};
 		return getNumber(a) < getNumber(b);
 		});
+		/*
 	cout << "Sorted Vector:\n";
 	for (auto e : PathV)
 	{
 		cout << e endo;
 	}
+		*/
 	return PathV;
 }
 
@@ -423,11 +426,13 @@ bool EncodeFolder(const string& ifoldername, const string& ffilename_ ,ostream& 
 	ReadFileToArray(ffilename, array,out);
 	inputSize = array.size();
 	out << "ARRAY Size:" << array.size() << "bit/" << array.size() / 8 << "Bytes" endo;
+	/*
 	cout << "Filelist:";
 	for (auto i : FileList)
 	{
 		cout << i endo;
 	}
+		*/
 	out<<"Calculating NIL..." endo;//NIL = Needed Image Load
 	for(int i = 0; bitcounter < inputSize; i++)
 	{
@@ -467,28 +472,28 @@ bool EncodeFolder(const string& ifoldername, const string& ffilename_ ,ostream& 
 	return 0;
 }
 
-bool DecodeFolder( const string& oFoldername_,const string& mFoldername, ostream& out)
+bool DecodeFolder( const string& mFoldername,const string& fFoldername_, ostream& out)
 {
 	unsigned char* imgO{};
 	unsigned char* imgE{};
 	int w{}, h{}, channels{}, stringI{}, bitI{};
-	string oFoldername = oFoldername_;
+	string fFoldername = fFoldername_;
 	string fullPath{}, filename{};
 	vector<string> eFileList{}, oFileList{};
 	vector<bool> decoded{}, decodedBuffer{};
-if(oFoldername=="")
+if(fFoldername=="")
 {
 	cout << "Enter Original Foldername:";
-	cin >> oFoldername;
+	cin >> fFoldername;
 }
-	if (!checkEx(oFoldername)) InvalidInputMessage("");
+	if (!checkEx(fFoldername)) InvalidInputMessage("");
 
 	eFileList = GetFilenamesFromFolder(mFoldername);
-	oFileList = GetFilenamesFromFolder(oFoldername);
+	oFileList = GetFilenamesFromFolder(fFoldername);
 
 	CheckFilelists(oFileList, eFileList,out);
 
-	fullPath = oFoldername + "\\" + oFileList[0];
+	fullPath = fFoldername + "\\" + oFileList[0];
 	imgO = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
 
 	fullPath = mFoldername + "\\" + eFileList[0];
@@ -505,12 +510,12 @@ if(oFoldername=="")
 	out << "Reading Data from the remaining Images..." endo;
 	for (int i = 1; i < eFileList.size(); i++)
 	{
-		cout << "Iteration:" << i << "/" << eFileList.size() endo;
+		out << "Iteration:" << i << "/" << eFileList.size() endo;
 		stringI = 0;
 		bitI = 0;
 		decodedBuffer.clear();
 
-		imgO = stbi_load((oFoldername + "\\" + oFileList[i]).c_str(), &w, &h, &channels, 3);
+		imgO = stbi_load((fFoldername + "\\" + oFileList[i]).c_str(), &w, &h, &channels, 3);
 		imgE = stbi_load((mFoldername + "\\" + eFileList[i]).c_str(), &w, &h, &channels, 3);
 		
 		ReadDataFromImageC(imgO, imgE, (w * h * channels), bitI, stringI, decodedBuffer, out);
