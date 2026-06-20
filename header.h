@@ -58,5 +58,7 @@ bool DecodeImage(const string& mFilename, const string& ffilename_, ostream& out
 bool EncodeImageFolder(const string& ifoldername, const string& ffilename_, ostream& out);
 bool DecodeImageFolder( const string& mFoldername,const string& fFoldername_, ostream& out);
 
-/* =========================================================5. WAV OPERATIONS =========================================================== */
+/* =========================================================6. WAV OPERATIONS =========================================================== */
 bool EncodeWav(const string ifilename, const string &ffilename, ostream &out);
+
+bool DecodeWav(const string& mfilename, const string& ifilename, ostream& out);

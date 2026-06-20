@@ -67,18 +67,27 @@ int main(int argc, char *argv[])
 
     auto decode = app.add_subcommand("decode", "Decode a File from a image or folder containing images");
     decode->add_option("-m,--modified", mfilefoldername, "The image or folder containing images to decode from (modified)")->required()->check(CLI::ExistingPath);
-    decode->add_option("-f,--from,-o,--original", ffilename, "The file or folder containing images to decode from (original)")->required()->check(CLI::ExistingPath);
+    decode->add_option("-i,--into,-o,--original", ifilefoldername, "The file or folder containing images to decode from (original)")->required()->check(CLI::ExistingPath);
     decode->callback([&]()
                      {
                            if (verbose) 
                      {
                          out = &std::cout; 
-                     }
+                      }
 
      if(std::filesystem::is_directory(mfilefoldername)) {
-        DecodeImageFolder(mfilefoldername, ffilename, *out);
+        if(*audio)
+        {}
+        else if (*image)
+        {DecodeImageFolder(mfilefoldername, ffilename, *out);}
+        
      } else if (std::filesystem::is_regular_file(mfilefoldername)) {
+        if(*audio)
+        {DecodeWav(mfilefoldername,ifilefoldername,*out);}
+        else if(*image)
+        {
         DecodeImage(mfilefoldername, ffilename, *out);
+        }
      } });
 
     app.callback([&]()

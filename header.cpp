@@ -239,8 +239,7 @@ void WriteBitsToFile(const std::string &filename, const std::vector<bool> &bits)
 	out.write(reinterpret_cast<const char *>(bytes.data()), bytes.size());
 }
 
-std::uintmax_t ReadbSizeFromFile(const std::string &filename)
-{
+std::uintmax_t ReadbSizeFromFile(const std::string &filename){
 	return std::filesystem::file_size(filename) * 8;
 }
 bool FileIs(const std::string& filename, const std::string& extension) {
@@ -300,6 +299,31 @@ void ReadDataFromImageC(unsigned char *imgC, unsigned char *imgR, int size, int 
 	}
 }
 
+void ReadDataFromWavC( float *mSampleData, float *iSampleData,int &bitI,int stringI,vector<bool> &decoded,ostream &out)
+{
+	bool end=false;
+	while(!end)
+	{
+		if (std::abs(iSampleData[bitI]) <= 0.9998f&&iSampleData[bitI]!=0)
+		{
+			if (mSampleData[bitI]==iSampleData[bitI]-0.0001f)
+			{
+				decoded.push_back(false);
+				stringI++;
+			}
+			else if (mSampleData[bitI]==iSampleData[bitI]+0.0001f)
+			{
+				decoded.push_back(true);
+				stringI++;
+			}
+			else
+			{
+				end = true;
+			}
+		}
+		}
+}
+
 string ReadFilenameFromImageC(unsigned char *imgC, unsigned char *imgR, int &bitI, int &stringI, ostream &out)
 {
 	bool end = false;
@@ -347,6 +371,71 @@ string ReadFilenameFromImageC(unsigned char *imgC, unsigned char *imgR, int &bit
 	return s.erase(s.size() - 1, 1);
 }
 
+string ReadFilenameFromWavC( float *mSampleData, float *iSampleData,int &bitI,int stringI,ostream &out)
+{
+bool end = false;
+vector<bool> decoded;
+decoded.reserve(200);
+const float epsilon = 0.00001f; 
+
+while (!end)
+	{
+	/*
+	Useful for debugging
+	out << "BitI:" << bitI<<"\nmSampleData:"<<mSampleData[bitI]<<"\niSampleData:"<<iSampleData[bitI] endo;
+		out << "StringI" << stringI endo;
+		out << "Decoded size:" << decoded.size() endo;
+		out <<"array so far:\n";
+		for(auto i : decoded)
+		{
+        out<<i endo;
+		}
+	*/
+		//check if valid bitI
+		
+if (std::abs(iSampleData[bitI]) <= 0.9998f && iSampleData[bitI] != 0.0f)
+{
+	out<<"Found valid bit" endo;
+    float diff = mSampleData[bitI] - iSampleData[bitI];
+
+    // Is the difference almost exactly -0.0001f?
+    if (std::abs(diff - (-0.0001f)) < epsilon)
+    {
+		out<<"found false"endo;
+        decoded.push_back(false);
+        stringI++;
+    }
+    // Is the difference almost exactly +0.0001f?
+    else if (std::abs(diff - 0.0001f) < epsilon)
+    {
+        decoded.push_back(true);
+        stringI++;
+    }
+    else
+    {
+      end=true;
+    }
+}
+
+		bitI++;
+
+		if (decoded.size() % 8 == 0&&!decoded.empty())
+		{
+			//out << "Checking for End Symbol... Size is:"<<decoded.size() endo;
+			out<<"Data so far:"<<BitsToAscii(decoded)endo;
+			if (BitsToAscii(decoded).find('|') != std::string::npos)
+			{
+				end = true;
+				out << "End Symbol found!" endo;
+			}
+		}
+	}
+	if (decoded.size() == 0)
+		InvalidInputMessage("Encoded Filename is not readable.");
+	string s = BitsToAscii(decoded);
+	return s.erase(s.size() - 1, 1);
+
+}
 /* =========================================================4. IMAGE OPERATIONS========================================================= */
 // i is into and f is from m is modified, o and c /e are old formats which are now depreciated
 bool EncodeImage(const string &ifilename, const string &ffilename_, ostream &out)
@@ -487,29 +576,29 @@ bool EncodeImageFolder(const string &ifoldername, const string &ffilename_, ostr
 	return 0;
 }
 
-bool DecodeImageFolder(const string &mFoldername, const string &fFoldername_, ostream &out)
+bool DecodeImageFolder(const string &mFoldername, const string &iFoldername_, ostream &out)
 {
 	unsigned char *imgO{};
 	unsigned char *imgE{};
 	int w{}, h{}, channels{}, stringI{}, bitI{};
-	string fFoldername = fFoldername_;
+	string iFoldername = iFoldername_;
 	string fullPath{}, filename{};
 	vector<string> eFileList{}, oFileList{};
 	vector<bool> decoded{}, decodedBuffer{};
-	if (fFoldername == "")
+	if (iFoldername == "")
 	{
 		cout << "Enter Original Foldername:";
-		cin >> fFoldername;
+		cin >> iFoldername;
 	}
-	if (!checkEx(fFoldername))
+	if (!checkEx(iFoldername))
 		InvalidInputMessage("");
 
 	eFileList = GetFilenamesFromFolder(mFoldername);
-	oFileList = GetFilenamesFromFolder(fFoldername);
+	oFileList = GetFilenamesFromFolder(iFoldername);
 
 	CheckFilelists(oFileList, eFileList, out);
 
-	fullPath = fFoldername + "\\" + oFileList[0];
+	fullPath = iFoldername + "\\" + oFileList[0];
 	imgO = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
 
 	fullPath = mFoldername + "\\" + eFileList[0];
@@ -531,7 +620,7 @@ bool DecodeImageFolder(const string &mFoldername, const string &fFoldername_, os
 		bitI = 0;
 		decodedBuffer.clear();
 
-		imgO = stbi_load((fFoldername + "\\" + oFileList[i]).c_str(), &w, &h, &channels, 3);
+		imgO = stbi_load((iFoldername + "\\" + oFileList[i]).c_str(), &w, &h, &channels, 3);
 		imgE = stbi_load((mFoldername + "\\" + eFileList[i]).c_str(), &w, &h, &channels, 3);
 
 		ReadDataFromImageC(imgO, imgE, (w * h * channels), bitI, stringI, decodedBuffer, out);
@@ -546,7 +635,7 @@ bool DecodeImageFolder(const string &mFoldername, const string &fFoldername_, os
 	return 0;
 }
 
-/* =========================================================5. WAV OPERATIONS =========================================================== */
+/* =========================================================6. WAV OPERATIONS =========================================================== */
 bool EncodeWav(const string ifilename, const string &ffilename, ostream &out)
 {
 	// variables
@@ -607,5 +696,35 @@ bool EncodeWav(const string ifilename, const string &ffilename, ostream &out)
 		drwav_free(SampleData, NULL);
 		InvalidInputMessage("Coudnt write to Output File (" + mfilename + ")");
 	}
+	return 0;
+}
+
+bool DecodeWav(const string& mfilename, const string& ifilename, ostream& out)
+{
+	//variables
+	string ffilename;
+    unsigned int mchannels,ichannels;
+	unsigned int mSampleRate,iSampleRate;
+	drwav_uint64 mTotalPCMFrameCount,iTotalPCMFrameCount;
+	vector<bool> array;
+	array.clear();
+	int bitI=0;
+	int stringI=0;
+	// load file to memory
+	out<<"Loading files into memory" endo;
+	float *mSampleData = drwav_open_file_and_read_pcm_frames_f32(mfilename.c_str(), &mchannels, &mSampleRate, &mTotalPCMFrameCount, NULL);
+	float *iSampleData = drwav_open_file_and_read_pcm_frames_f32(ifilename.c_str(), &ichannels, &iSampleRate, &iTotalPCMFrameCount, NULL);
+    if(mTotalPCMFrameCount!=iTotalPCMFrameCount)
+	{
+		drwav_free(mSampleData,NULL);
+		drwav_free(iSampleData,NULL);
+		InvalidInputMessage("Frame Count Does not Match, suggesting diffrent or corrupted Files\n modifiedTotalPCmFrameCount:"+ts(mTotalPCMFrameCount)+"\ninto/originalTotalPCmFramCount:"+ts(iTotalPCMFrameCount));
+	}
+	out<<"Decoding filename" endo;
+    ffilename=ReadFilenameFromWavC(mSampleData,iSampleData,bitI,stringI,out);
+	out<<"Decoding rest" endo;
+	ReadDataFromWavC(mSampleData,iSampleData,bitI,stringI,array,out);
+	out<<"Writing to file (disk)" endo;
+	WriteBitsToFile(ffilename,array);
 	return 0;
 }
