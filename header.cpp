@@ -569,8 +569,8 @@ bool EncodeWav(const string ifilename, const string &ffilename, ostream &out)
 	out << "Writing to file (memory)" endo;
 	for (size_t bitI = 0; stringI < array.size() && bitI < totalPCMFrameCount * channels; bitI++)
 	{
-		// check if the current bit is not a maximum Value (adding or subtracting would generate a unwanted effect)
-		if (std::abs(SampleData[bitI]) <= 0.9998f)
+		// check if the current bit is not a maximum Value or zero (adding or subtracting would generate a unwanted effect)
+		if (std::abs(SampleData[bitI]) <= 0.9998f&&SampleData[bitI]!=0)
 		{
 			if (array[stringI] == 0)
 				SampleData[bitI] = SampleData[bitI] - 0.0001f;
