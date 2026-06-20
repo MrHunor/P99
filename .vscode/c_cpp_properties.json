@@ -5,7 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "C:/libarys/stb/",
-                "C:/libarys/CLI11"
+                "C:/libarys/CLI11",
+                "C:/libarys/dr_libs"
             ],
             "defines": [],
             "compilerPath": "C:/msys64/ucrt64/bin/gcc.exe",

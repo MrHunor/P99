@@ -11,6 +11,7 @@
                 "${fileDirname}\\*.cpp",
                 "-IC:/libarys/stb",
                 "-IC:/libarys/CLI11",
+                "-IC:/libarys/dr_libs",
                 "-o",
                 "${fileDirname}\\main.exe",
                 "-static-libgcc",
