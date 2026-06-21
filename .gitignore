@@ -14,7 +14,10 @@
 testfiles/*
 
 #executable
-*.exe
+main.exe
 
 #angr-managment analysis files
 main.exe*
+
+#sndfile.dll
+sndfile.dll

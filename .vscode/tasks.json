@@ -11,11 +11,11 @@
                 "${fileDirname}\\*.cpp",
                 "-IC:/libarys/stb",
                 "-IC:/libarys/CLI11",
-                "-IC:/libarys/dr_libs",
+                "-IC:/libarys/libsndfile/include",
+                "-LC:/libarys/libsndfile/lib",
+                "-lsndfile",
                 "-o",
                 "${fileDirname}\\main.exe",
-                "-static-libgcc",
-                "-static-libstdc++",
                 "-static"
             ],
             "options": {

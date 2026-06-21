@@ -1,5 +1,3 @@
-#define DR_WAV_IMPLEMENTATION
-#include <dr_wav.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -57,8 +55,7 @@ int main(int argc, char *argv[])
                             } else if (std::filesystem::is_regular_file(ifilefoldername)) {
                           if(*audio)
                             {
-                               
-                            EncodeWav(ifilefoldername,ffilename,*out);
+                               EncodeWav(ifilefoldername,ffilename,*out);
                             }
                             else if (*image)
                             {
@@ -83,7 +80,9 @@ int main(int argc, char *argv[])
         
      } else if (std::filesystem::is_regular_file(mfilefoldername)) {
         if(*audio)
-        {DecodeWav(mfilefoldername,ifilefoldername,*out);}
+        {
+
+        }
         else if(*image)
         {
         DecodeImage(mfilefoldername, ffilename, *out);

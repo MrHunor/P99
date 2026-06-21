@@ -1,4 +1,3 @@
-
 #pragma warning(disable : 4996)
 #define endo << "\n"
 #define ts(x) std::to_string(x)
@@ -14,7 +13,7 @@
 #include <cstdint>
 #include "header.h"
 #include <algorithm>
-#include <dr_wav.h>
+#include <sndfile.h>
 namespace fs = std::filesystem;
 
 using std::cin;
@@ -239,11 +238,13 @@ void WriteBitsToFile(const std::string &filename, const std::vector<bool> &bits)
 	out.write(reinterpret_cast<const char *>(bytes.data()), bytes.size());
 }
 
-std::uintmax_t ReadbSizeFromFile(const std::string &filename){
+std::uintmax_t ReadbSizeFromFile(const std::string &filename)
+{
 	return std::filesystem::file_size(filename) * 8;
 }
-bool FileIs(const std::string& filename, const std::string& extension) {
-    return std::filesystem::path(filename).extension() == extension;
+bool FileIs(const std::string &filename, const std::string &extension)
+{
+	return std::filesystem::path(filename).extension() == extension;
 }
 /* =========================================================3. LOW-LEVEL IMAGE LOGIC========================================================= */
 
@@ -299,19 +300,19 @@ void ReadDataFromImageC(unsigned char *imgC, unsigned char *imgR, int size, int 
 	}
 }
 
-void ReadDataFromWavC( float *mSampleData, float *iSampleData,int &bitI,int stringI,vector<bool> &decoded,ostream &out)
+void ReadDataFromWavC(float *mSampleData, float *iSampleData, int &bitI, int stringI, vector<bool> &decoded, ostream &out)
 {
-	bool end=false;
-	while(!end)
+	bool end = false;
+	while (!end)
 	{
-		if (std::abs(iSampleData[bitI]) <= 0.9998f&&iSampleData[bitI]!=0)
+		if (std::abs(iSampleData[bitI]) <= 0.9998f && iSampleData[bitI] != 0)
 		{
-			if (mSampleData[bitI]==iSampleData[bitI]-0.0001f)
+			if (mSampleData[bitI] == iSampleData[bitI] - 0.0001f)
 			{
 				decoded.push_back(false);
 				stringI++;
 			}
-			else if (mSampleData[bitI]==iSampleData[bitI]+0.0001f)
+			else if (mSampleData[bitI] == iSampleData[bitI] + 0.0001f)
 			{
 				decoded.push_back(true);
 				stringI++;
@@ -321,7 +322,7 @@ void ReadDataFromWavC( float *mSampleData, float *iSampleData,int &bitI,int stri
 				end = true;
 			}
 		}
-		}
+	}
 }
 
 string ReadFilenameFromImageC(unsigned char *imgC, unsigned char *imgR, int &bitI, int &stringI, ostream &out)
@@ -371,12 +372,13 @@ string ReadFilenameFromImageC(unsigned char *imgC, unsigned char *imgR, int &bit
 	return s.erase(s.size() - 1, 1);
 }
 
+/*
 string ReadFilenameFromWavC( float *mSampleData, float *iSampleData,int &bitI,int stringI,ostream &out)
 {
 bool end = false;
 vector<bool> decoded;
 decoded.reserve(200);
-const float epsilon = 0.00001f; 
+const float epsilon = 0.00001f;
 
 while (!end)
 	{
@@ -388,33 +390,33 @@ while (!end)
 		out <<"array so far:\n";
 		for(auto i : decoded)
 		{
-        out<<i endo;
+		out<<i endo;
 		}
-	*/
+
 		//check if valid bitI
-		
+
 if (std::abs(iSampleData[bitI]) <= 0.9998f && iSampleData[bitI] != 0.0f)
 {
 	out<<"Found valid bit" endo;
-    float diff = mSampleData[bitI] - iSampleData[bitI];
+	float diff = mSampleData[bitI] - iSampleData[bitI];
 
-    // Is the difference almost exactly -0.0001f?
-    if (std::abs(diff - (-0.0001f)) < epsilon)
-    {
+	// Is the difference almost exactly -0.0001f?
+	if (std::abs(diff - (-0.0001f)) < epsilon)
+	{
 		out<<"found false"endo;
-        decoded.push_back(false);
-        stringI++;
-    }
-    // Is the difference almost exactly +0.0001f?
-    else if (std::abs(diff - 0.0001f) < epsilon)
-    {
-        decoded.push_back(true);
-        stringI++;
-    }
-    else
-    {
-      end=true;
-    }
+		decoded.push_back(false);
+		stringI++;
+	}
+	// Is the difference almost exactly +0.0001f?
+	else if (std::abs(diff - 0.0001f) < epsilon)
+	{
+		decoded.push_back(true);
+		stringI++;
+	}
+	else
+	{
+	  end=true;
+	}
 }
 
 		bitI++;
@@ -436,6 +438,7 @@ if (std::abs(iSampleData[bitI]) <= 0.9998f && iSampleData[bitI] != 0.0f)
 	return s.erase(s.size() - 1, 1);
 
 }
+*/
 /* =========================================================4. IMAGE OPERATIONS========================================================= */
 // i is into and f is from m is modified, o and c /e are old formats which are now depreciated
 bool EncodeImage(const string &ifilename, const string &ffilename_, ostream &out)
@@ -447,7 +450,8 @@ bool EncodeImage(const string &ifilename, const string &ffilename_, ostream &out
 	unsigned char *img = stbi_load(ifilename.c_str(), &w, &h, &channels, 3);
 	imgSize = w * h * 3;
 
-	if (!img)InvalidInputMessage();
+	if (!img)
+		InvalidInputMessage();
 	if (ffilename == "")
 	{
 		cout << "Enter the containing Filename:";
@@ -636,7 +640,11 @@ bool DecodeImageFolder(const string &mFoldername, const string &iFoldername_, os
 }
 
 /* =========================================================6. WAV OPERATIONS =========================================================== */
+
+/*
 bool EncodeWav(const string ifilename, const string &ffilename, ostream &out)
+
+
 {
 	// variables
 	string mfilename = ifilename;
@@ -700,10 +708,11 @@ bool EncodeWav(const string ifilename, const string &ffilename, ostream &out)
 }
 
 bool DecodeWav(const string& mfilename, const string& ifilename, ostream& out)
+
 {
 	//variables
 	string ffilename;
-    unsigned int mchannels,ichannels;
+	unsigned int mchannels,ichannels;
 	unsigned int mSampleRate,iSampleRate;
 	drwav_uint64 mTotalPCMFrameCount,iTotalPCMFrameCount;
 	vector<bool> array;
@@ -714,17 +723,77 @@ bool DecodeWav(const string& mfilename, const string& ifilename, ostream& out)
 	out<<"Loading files into memory" endo;
 	float *mSampleData = drwav_open_file_and_read_pcm_frames_f32(mfilename.c_str(), &mchannels, &mSampleRate, &mTotalPCMFrameCount, NULL);
 	float *iSampleData = drwav_open_file_and_read_pcm_frames_f32(ifilename.c_str(), &ichannels, &iSampleRate, &iTotalPCMFrameCount, NULL);
-    if(mTotalPCMFrameCount!=iTotalPCMFrameCount)
+	if(mTotalPCMFrameCount!=iTotalPCMFrameCount)
 	{
 		drwav_free(mSampleData,NULL);
 		drwav_free(iSampleData,NULL);
 		InvalidInputMessage("Frame Count Does not Match, suggesting diffrent or corrupted Files\n modifiedTotalPCmFrameCount:"+ts(mTotalPCMFrameCount)+"\ninto/originalTotalPCmFramCount:"+ts(iTotalPCMFrameCount));
 	}
 	out<<"Decoding filename" endo;
-    ffilename=ReadFilenameFromWavC(mSampleData,iSampleData,bitI,stringI,out);
+	ffilename=ReadFilenameFromWavC(mSampleData,iSampleData,bitI,stringI,out);
 	out<<"Decoding rest" endo;
 	ReadDataFromWavC(mSampleData,iSampleData,bitI,stringI,array,out);
 	out<<"Writing to file (disk)" endo;
 	WriteBitsToFile(ffilename,array);
 	return 0;
+}
+	*/
+
+bool EncodeWav(const string &ifilename, const string &ffilename, ostream &out)
+{
+	string mfilename = ifilename;
+	mfilename.insert(mfilename.length()-4,"M");
+	int bitI = 0;
+	int stringI = 0;
+	sf_count_t totalSamples;
+	sf_count_t originalFrames;
+	sf_count_t framesRead;
+	sf_count_t framesWritten;
+	vector<short> buffer;
+	vector<bool> fromarray;
+	SF_INFO sfinfo;
+	sfinfo.format = 0;
+
+	SNDFILE *infline = sf_open(ifilename.c_str(), SFM_READ, &sfinfo);
+	originalFrames = sfinfo.frames;
+	if (!infline)
+		InvalidInputMessage("Coudnt open file input file");
+	out << "Details:" endo;
+	out << "Sample Rate:" << sfinfo.samplerate << "Hz" endo;
+	out << "Channels   :" << sfinfo.channels endo;
+	out << "Frames     :" << sfinfo.frames endo;
+	totalSamples = sfinfo.frames * sfinfo.channels;
+	buffer.resize(totalSamples);
+	framesRead = sf_readf_short(infline, buffer.data(), sfinfo.frames);
+	if (framesRead != sfinfo.frames)
+		InvalidInputMessage("Read Frame Count does not match expected Frame Count\nRead Frame Count"+ts(framesRead)+"\nExpected:"+ts(sfinfo.frames));
+	sf_close(infline);
+	ReadFileToArray(ffilename, fromarray, out);
+	if (fromarray.size() >= totalSamples)
+		InvalidInputMessage("\nThe File specified does not contain enough space to encode\nCapacity:"+ts(totalSamples)+"\nFilesize:"+ts(fromarray.size()));
+	out<<"Writing... (memory)";
+		while (bitI < totalSamples && stringI < fromarray.size())
+	{
+		if (std::abs(buffer[bitI]) < 32767 && buffer[bitI] != 0)
+		{
+			if (fromarray[stringI] == false)
+			{
+				buffer[bitI] = buffer[bitI] - 1;
+			}
+			else
+			{
+				buffer[bitI] = buffer[bitI] + 1;
+			}
+			stringI++;
+		}
+
+		bitI++;
+	}
+SNDFILE* outfile = sf_open(mfilename.c_str(),SFM_WRITE,&sfinfo);
+if(!outfile) InvalidInputMessage("Coudnt open output File");
+out<<"Wrtining ... (disk)";
+framesWritten = sf_writef_short(outfile,buffer.data(),originalFrames);
+if(framesWritten != originalFrames) InvalidInputMessage("Written Frame Count does not match expected Frame Count");
+sf_close(outfile);
+return 0;
 }
