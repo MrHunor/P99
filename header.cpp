@@ -254,6 +254,7 @@ bool FileIs(const std::string &filename, const std::string &extension)
 
 /* =========================================================3. LOW-LEVEL IMAGE LOGIC========================================================= */
 
+
 bool WriteToImage(unsigned char *img, size_t imgSize, const vector<bool> &s, ostream &out, int &bitI, int &stringI)
 {
     out << "-> Img: Write Bytes" endo;
