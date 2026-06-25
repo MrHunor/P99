@@ -30,7 +30,6 @@ int main(int argc, char *argv[])
     auto *audio = media_group->add_flag("-a,--audio", "Into File or all Files in the Folder is/are Audio File");
     auto *image = media_group->add_flag("-m,--image", "Into File or all Files in the Folder is/are image");
     media_group->require_option(1);
-
     auto encode = app.add_subcommand("encode", "Encode a File into a image or folder containing images");
     encode->add_option("-i,--into", ifilefoldername, "The file or folder containing images to encode into")->required()->check(CLI::ExistingPath);
     encode->add_option("-f,--from", ffilename, "The file to encode from")->required()->check(CLI::ExistingFile);
@@ -81,7 +80,7 @@ int main(int argc, char *argv[])
      } else if (std::filesystem::is_regular_file(mfilefoldername)) {
         if(*audio)
         {
-
+DecodeWav(mfilefoldername,ifilefoldername,*out);
         }
         else if(*image)
         {
