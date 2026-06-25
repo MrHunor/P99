@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <sndfile.h>
 namespace fs = std::filesystem;
+
 //test command: main.exe -v -a decode -m testfiles/soundm.wav -i testfiles/sound.wav
 using std::cin;
 using std::cout;
@@ -312,33 +313,6 @@ void ReadDataFromImageC(unsigned char *imgC, unsigned char *imgR, int size, int 
     out << "-> Img: Read Done" endo;
 }
 
-void ReadDataFromWavC(float *mSampleData, float *iSampleData, int &bitI, int stringI, vector<bool> &decoded, ostream &out)
-{
-    out << "-> WavC: Read F32" endo;
-    bool end = false;
-    while (!end)
-    {
-        if (std::abs(iSampleData[bitI]) <= 0.9998f && iSampleData[bitI] != 0)
-        {
-            if (mSampleData[bitI] == iSampleData[bitI] - 0.0001f)
-            {
-                decoded.push_back(false);
-                stringI++;
-            }
-            else if (mSampleData[bitI] == iSampleData[bitI] + 0.0001f)
-            {
-                decoded.push_back(true);
-                stringI++;
-            }
-            else
-            {
-                end = true;
-            }
-        }
-    }
-    out << "-> WavC: F32 Done" endo;
-}
-
 string ReadFilenameFromImageC(unsigned char *imgC, unsigned char *imgR, int &bitI, int &stringI, ostream &out)
 {
     out << "-> Img: Extract Filename" endo;
@@ -348,8 +322,6 @@ string ReadFilenameFromImageC(unsigned char *imgC, unsigned char *imgR, int &bit
 
     while (!end)
     {
-        // Minimalized repetitive output to avoid console flooding per bit
-        // out << "BitI:" << bitI endo; 
         if (imgC[bitI] > 0 && imgC[bitI] < 255)
         {
             if (imgR[bitI] == imgC[bitI] - 1)
@@ -386,81 +358,7 @@ string ReadFilenameFromImageC(unsigned char *imgC, unsigned char *imgR, int &bit
     return s.erase(s.size() - 1, 1);
 }
 
-string ReadFilenameFromWavC(vector<short> &mbuffer, vector<short> &ibuffer, int& bitI, int& stringI, ostream &out)
-{
-    out << "-> WavC: Extract Filename" endo;
-    bool end = false;
-    vector<bool> decoded;
-    decoded.reserve(200);
-
-    while (!end)
-    {
-        if (std::abs(ibuffer[bitI]) < 32767 && ibuffer[bitI] != 0)
-        {
-            if (mbuffer[bitI] == ibuffer[bitI] - 1)
-            {
-                decoded.push_back(false);
-                stringI++;
-            }
-            else if (mbuffer[bitI] == ibuffer[bitI] + 1)
-            {
-                decoded.push_back(true);
-                stringI++;
-            }
-            else
-            {
-                end = true;
-            }
-        }
-
-        bitI++;
-
-        if (decoded.size() % 8 == 0 && decoded.size() > 0)
-        {
-            if (BitsToAscii(decoded).find('|') != std::string::npos)
-            {
-                end = true;
-                out << "-> WavC: Found '|' delimiter" endo;
-            }
-        }
-    }
-    if (decoded.size() == 0)
-        InvalidInputMessage("Encoded Filename is not readable.");
-    string s = BitsToAscii(decoded);
-    out << "-> WavC: Filename Extracted" endo;
-    return s.erase(s.size() - 1, 1);
-}
-
-void ReadDataFromWavC(vector<short>& mbuffer, vector<short>& ibuffer, int &bitI, int& stringI, vector<bool>& decoded, ostream &out)
-{
-    out << "-> WavC: Read I16 Data" endo;
-    bool end = false;
-    while (!end)
-    {
-        if (std::abs(ibuffer[bitI]) < 32767 && ibuffer[bitI] != 0)
-        {
-            if (mbuffer[bitI] == ibuffer[bitI] - 1)
-            {
-                decoded.push_back(false);
-                stringI++;
-            }
-            else if (mbuffer[bitI] == ibuffer[bitI] + 1)
-            {
-                decoded.push_back(true);
-                stringI++;
-            }
-            else
-            {
-                end = true;
-            }
-        }
-
-        bitI++;
-    }
-    out << "-> WavC: I16 Done" endo;
-}
-
-/* =========================================================4. IMAGE OPERATIONS========================================================= */
+/* =========================================================4. HIGH-LEVEL IMAGE & FOLDER OPERATIONS========================================================= */
 
 bool EncodeImage(const string &ifilename, const string &ffilename_, ostream &out)
 {
@@ -557,8 +455,6 @@ bool DecodeImage(const string &mFilename, const string &ffilename_, ostream &out
     out << "-> DecImg: Complete" endo;
     return 0;
 }
-
-/* =========================================================5. FOLDER OPERATIONS========================================================= */
 
 bool EncodeImageFolder(const string &ifoldername, const string &ffilename_, ostream &out)
 {
@@ -674,7 +570,7 @@ bool DecodeImageFolder(const string &mFoldername, const string &iFoldername_, os
     stbi_image_free(imgE);
 
     out << "Reading Data from the remaining Images..." endo;
-    for (int i = 1; i < eFileList.size(); i++)
+    for (size_t i = 1; i < eFileList.size(); i++)
     {
         out << "Iteration:" << i << "/" << eFileList.size() endo;
         stringI = 0;
@@ -699,7 +595,110 @@ bool DecodeImageFolder(const string &mFoldername, const string &iFoldername_, os
     return 0;
 }
 
-/* =========================================================6. WAV OPERATIONS =========================================================== */
+/* =========================================================5. LOW-LEVEL WAV LOGIC========================================================= */
+
+void ReadDataFromWavC(float *mSampleData, float *iSampleData, int &bitI, int stringI, vector<bool> &decoded, ostream &out)
+{
+    out << "-> WavC: Read F32" endo;
+    bool end = false;
+    while (!end)
+    {
+        if (std::abs(iSampleData[bitI]) <= 0.9998f && iSampleData[bitI] != 0)
+        {
+            if (mSampleData[bitI] == iSampleData[bitI] - 0.0001f)
+            {
+                decoded.push_back(false);
+                stringI++;
+            }
+            else if (mSampleData[bitI] == iSampleData[bitI] + 0.0001f)
+            {
+                decoded.push_back(true);
+                stringI++;
+            }
+            else
+            {
+                end = true;
+            }
+        }
+    }
+    out << "-> WavC: F32 Done" endo;
+}
+
+string ReadFilenameFromWavC(vector<short> &mbuffer, vector<short> &ibuffer, int& bitI, int& stringI, ostream &out)
+{
+    out << "-> WavC: Extract Filename" endo;
+    bool end = false;
+    vector<bool> decoded;
+    decoded.reserve(200);
+
+    while (!end)
+    {
+        if (std::abs(ibuffer[bitI]) < 32767 && ibuffer[bitI] != 0)
+        {
+            if (mbuffer[bitI] == ibuffer[bitI] - 1)
+            {
+                decoded.push_back(false);
+                stringI++;
+            }
+            else if (mbuffer[bitI] == ibuffer[bitI] + 1)
+            {
+                decoded.push_back(true);
+                stringI++;
+            }
+            else
+            {
+                end = true;
+            }
+        }
+
+        bitI++;
+
+        if (decoded.size() % 8 == 0 && decoded.size() > 0)
+        {
+            if (BitsToAscii(decoded).find('|') != std::string::npos)
+            {
+                end = true;
+                out << "-> WavC: Found '|' delimiter" endo;
+            }
+        }
+    }
+    if (decoded.size() == 0)
+        InvalidInputMessage("Encoded Filename is not readable.");
+    string s = BitsToAscii(decoded);
+    out << "-> WavC: Filename Extracted" endo;
+    return s.erase(s.size() - 1, 1);
+}
+
+void ReadDataFromWavC(vector<short>& mbuffer, vector<short>& ibuffer, int &bitI, int& stringI, vector<bool>& decoded, ostream &out)
+{
+    out << "-> WavC: Read I16 Data" endo;
+    bool end = false;
+    while (!end)
+    {
+        if (std::abs(ibuffer[bitI]) < 32767 && ibuffer[bitI] != 0)
+        {
+            if (mbuffer[bitI] == ibuffer[bitI] - 1)
+            {
+                decoded.push_back(false);
+                stringI++;
+            }
+            else if (mbuffer[bitI] == ibuffer[bitI] + 1)
+            {
+                decoded.push_back(true);
+                stringI++;
+            }
+            else
+            {
+                end = true;
+            }
+        }
+
+        bitI++;
+    }
+    out << "-> WavC: I16 Done" endo;
+}
+
+/* =========================================================6. HIGH-LEVEL WAV OPERATIONS =========================================================== */
 
 bool EncodeWav(const string &ifilename, const string &ffilename, ostream &out)
 {
@@ -785,8 +784,6 @@ bool DecodeWav(const string &mFilename, const string &iFilename, ostream &out)
     vector<short> mbuffer;
     vector<short> ibuffer;
     vector<bool> decoded;
-    sf_count_t mFrames;
-    sf_count_t iFrames;
     SF_INFO msfInfo;
     SF_INFO isfInfo;
     
@@ -794,22 +791,22 @@ bool DecodeWav(const string &mFilename, const string &iFilename, ostream &out)
     SNDFILE *mfile = sf_open(mFilename.c_str(), SFM_READ, &msfInfo);
     out << "-> DecWav: Open Orig" endo;
     SNDFILE *ifile = sf_open(iFilename.c_str(), SFM_READ, &isfInfo);
-    if (!mfile || !ifile)InvalidInputMessage("Coudnt Open File");
+    if (!mfile || !ifile) InvalidInputMessage("Coudnt Open File");
     
     out << "-> DecWav: Resize Buffers" endo;
-    mbuffer.resize(msfInfo.channels* msfInfo.frames);
-    ibuffer.resize(isfInfo.channels* isfInfo.frames);
+    mbuffer.resize(msfInfo.channels * msfInfo.frames);
+    ibuffer.resize(isfInfo.channels * isfInfo.frames);
     
     out << "-> DecWav: Read SF" endo;
-    sf_readf_short(mfile,mbuffer.data(),msfInfo.frames);
-    sf_readf_short(ifile,ibuffer.data(),isfInfo.frames);
-    if(mbuffer.empty()||ibuffer.empty())InvalidInputMessage("Coudnt read Files to Memory");
-    out<<"Read Files succesfully into Memory" endo;
+    sf_readf_short(mfile, mbuffer.data(), msfInfo.frames);
+    sf_readf_short(ifile, ibuffer.data(), isfInfo.frames);
+    if (mbuffer.empty() || ibuffer.empty()) InvalidInputMessage("Coudnt read Files to Memory");
+    out << "Read Files successfully into Memory" endo;
     
     out << "-> DecWav: Validate Sizes" endo;
     if (msfInfo.frames * msfInfo.channels != isfInfo.frames * isfInfo.channels)
         InvalidInputMessage("Sample amounts do not match, indicating file corruption or wrong file selection");
-    out<<"Sample sizes match:\nmSamplesize:"<<msfInfo.frames * msfInfo.channels<<"\niSampleSize:"<<isfInfo.frames * isfInfo.channels endo;
+    out << "Sample sizes match:\nmSamplesize:" << msfInfo.frames * msfInfo.channels << "\niSampleSize:" << isfInfo.frames * isfInfo.channels endo;
 
     out << "-> DecWav: Find Non-Zero" endo;
     for (; bitI < mbuffer.size(); ++bitI) {
@@ -817,23 +814,23 @@ bool DecodeWav(const string &mFilename, const string &iFilename, ostream &out)
             break; 
         }
     }
-    out<<"First non zero Sample at:"<< bitI endo;
+    out << "First non zero Sample at:" << bitI endo;
     
-    out<<"First ten samples:" endo;
-    for (size_t i = bitI; i < 10+bitI; i++)
+    out << "First ten samples:" endo;
+    for (size_t i = bitI; i < 10 + bitI; i++)
     {
-    out<<"n:"<<i<<" | mbuffer:"<<mbuffer[i]<<" | ibuffer:"<<ibuffer[i] endo;
+        out << "n:" << i << " | mbuffer:" << mbuffer[i] << " | ibuffer:" << ibuffer[i] endo;
     }
     
     out << "-> DecWav: Read Filename" endo;
     ffilename = ReadFilenameFromWavC(mbuffer, ibuffer, bitI, stringI, out);
-    out<<"Decoded filename:"<<ffilename endo;
+    out << "Decoded filename:" << ffilename endo;
     
     out << "-> DecWav: Read Data" endo;
-    ReadDataFromWavC(mbuffer,ibuffer,bitI,stringI,decoded,out);
+    ReadDataFromWavC(mbuffer, ibuffer, bitI, stringI, decoded, out);
     
-    out<<"Writing to file" endo;
-    WriteBitsToFile(ffilename,decoded);
+    out << "Writing to file" endo;
+    WriteBitsToFile(ffilename, decoded);
     
     out << "-> DecWav: Complete" endo;
     return 0;
