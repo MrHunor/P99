@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
         if(*audio)
         {}
         else if (*image)
-        {DecodeImageFolder(mfilefoldername, ffilename, *out);}
+        {DecodeImageFolder(mfilefoldername, ifilefoldername, *out);}
         
      } else if (std::filesystem::is_regular_file(mfilefoldername)) {
         if(*audio)
@@ -84,7 +84,7 @@ DecodeWav(mfilefoldername,ifilefoldername,*out);
         }
         else if(*image)
         {
-        DecodeImage(mfilefoldername, ffilename, *out);
+        DecodeImage(mfilefoldername, ifilefoldername, *out);
         }
      } });
 
