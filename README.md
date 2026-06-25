@@ -1,4 +1,4 @@
-# P99 - Text into Image Steganography (AI Generated Overview)
+# P99 - Text into Image Steganography (AI Generated Overview) © 2026 MrHunor, GPLv3
 
 
 
