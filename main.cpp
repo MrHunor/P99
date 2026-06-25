@@ -19,6 +19,7 @@ int main(int argc, char *argv[])
     NullStream nullout;
     char mediatype;
     std::ostream *out = &nullout;
+    TeeStream tee("log.txt");
     bool verbose = false;
     std::string ifilefoldername;
     std::string ffilename;
@@ -37,7 +38,7 @@ int main(int argc, char *argv[])
                      {
                            if (verbose) 
                      {
-                         out = &std::cout; 
+                         out = &tee; 
                      }
 
                          if(std::filesystem::is_directory(ifilefoldername)) {

@@ -8,6 +8,8 @@ using std::string;
 using std::vector;
 using std::ostream;
 
+
+
 // A stream buffer that does nothing
 class NullBuffer : public std::streambuf {
 public:
