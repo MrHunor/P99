@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 echo ===================================================
-echo                P99 TEST PIPELINE
+echo                 P99 TEST PIPELINE
 echo ===================================================
 
 :: Configuration
@@ -18,7 +18,8 @@ set "TEMP_TXT=temp_test.txt"
 set "TEMP_VID=temp_video.mp4"
 set "TEMP_TXT_AUDIO=temp_audio_test.txt"
 
-set "SINGLE_OUT_IMG=output.png"
+:: Modified outputs implicitly named by the application ('M' appended)
+set "SINGLE_OUT_IMG=%IMAGES_ORIG_DIR%\1M.png"
 set "FOLDER_OUT_DIR=%IMAGES_ORIG_DIR%M"
 set "SINGLE_OUT_AUDIO=testfiles\soundM.wav"
 
@@ -33,18 +34,18 @@ echo.
 echo --- TEST 1: Single Image Mode (TXT) ---
 copy "%SRC_TXT%" "%TEMP_TXT%" >nul
 
-echo [CMD] %EXE% --verbose --image encode --into "%SINGLE_ORIG_IMG%" --from "%TEMP_TXT%"
-"%EXE%" --verbose --image encode --into "%SINGLE_ORIG_IMG%" --from "%TEMP_TXT%"
+echo [CMD] %EXE% -vvvv -m encode --into "%SINGLE_ORIG_IMG%" --from "%TEMP_TXT%"
+"%EXE%" -vvvv -m encode --into "%SINGLE_ORIG_IMG%" --from "%TEMP_TXT%"
 if %ERRORLEVEL% neq 0 goto cleanup_fail
 
 del /q "%TEMP_TXT%"
 
-echo [CMD] %EXE% --verbose --image decode --modified "%SINGLE_OUT_IMG%" --original "%SINGLE_ORIG_IMG%"
-"%EXE%" --verbose --image decode --modified "%SINGLE_OUT_IMG%" --original "%SINGLE_ORIG_IMG%"
+echo [CMD] %EXE% -vvvv -m decode --modified "%SINGLE_OUT_IMG%" --original "%SINGLE_ORIG_IMG%"
+"%EXE%" -vvvv -m decode --modified "%SINGLE_OUT_IMG%" --original "%SINGLE_ORIG_IMG%"
 if %ERRORLEVEL% neq 0 goto cleanup_fail
 
 if not exist "%TEMP_TXT%" (
-    echo [ERROR] Expected output file '%TEMP_TXT%' was not generated.
+    echo [ERROR] Expected output file '%TEMP_TXT%' was not unpacked by decoder.
     goto cleanup_fail
 )
 
@@ -70,18 +71,18 @@ echo.
 echo --- TEST 2: Folder Mode (MP4) ---
 copy "%SRC_VID%" "%TEMP_VID%" >nul
 
-echo [CMD] %EXE% --verbose --image encode --into "%IMAGES_ORIG_DIR%" --from "%TEMP_VID%"
-"%EXE%" --verbose --image encode --into "%IMAGES_ORIG_DIR%" --from "%TEMP_VID%"
+echo [CMD] %EXE% -vvvv -m encode --into "%IMAGES_ORIG_DIR%" --from "%TEMP_VID%"
+"%EXE%" -vvvv -m encode --into "%IMAGES_ORIG_DIR%" --from "%TEMP_VID%"
 if %ERRORLEVEL% neq 0 goto cleanup_fail
 
 del /q "%TEMP_VID%"
 
-echo [CMD] %EXE% --verbose --image decode --modified "%FOLDER_OUT_DIR%" --original "%IMAGES_ORIG_DIR%"
-"%EXE%" --verbose --image decode --modified "%FOLDER_OUT_DIR%" --original "%IMAGES_ORIG_DIR%"
+echo [CMD] %EXE% -vvvv -m decode --modified "%FOLDER_OUT_DIR%" --original "%IMAGES_ORIG_DIR%"
+"%EXE%" -vvvv -m decode --modified "%FOLDER_OUT_DIR%" --original "%IMAGES_ORIG_DIR%"
 if %ERRORLEVEL% neq 0 goto cleanup_fail
 
 if not exist "%TEMP_VID%" (
-    echo [ERROR] Expected output file '%TEMP_VID%' was not generated.
+    echo [ERROR] Expected output file '%TEMP_VID%' was not unpacked by decoder.
     goto cleanup_fail
 )
 
@@ -107,18 +108,18 @@ echo.
 echo --- TEST 3: Single Audio Mode (TXT) ---
 copy "%SRC_TXT%" "%TEMP_TXT_AUDIO%" >nul
 
-echo [CMD] %EXE% --verbose --audio encode --into "%SRC_AUDIO%" --from "%TEMP_TXT_AUDIO%"
-"%EXE%" --verbose --audio encode --into "%SRC_AUDIO%" --from "%TEMP_TXT_AUDIO%"
+echo [CMD] %EXE% -vvvv -a encode --into "%SRC_AUDIO%" --from "%TEMP_TXT_AUDIO%"
+"%EXE%" -vvvv -a encode --into "%SRC_AUDIO%" --from "%TEMP_TXT_AUDIO%"
 if %ERRORLEVEL% neq 0 goto cleanup_fail
 
 del /q "%TEMP_TXT_AUDIO%"
 
-echo [CMD] %EXE% --verbose --audio decode --modified "%SINGLE_OUT_AUDIO%" --original "%SRC_AUDIO%"
-"%EXE%" --verbose --audio decode --modified "%SINGLE_OUT_AUDIO%" --original "%SRC_AUDIO%"
+echo [CMD] %EXE% -vvvv -a decode --modified "%SINGLE_OUT_AUDIO%" --original "%SRC_AUDIO%"
+"%EXE%" -vvvv -a decode --modified "%SINGLE_OUT_AUDIO%" --original "%SRC_AUDIO%"
 if %ERRORLEVEL% neq 0 goto cleanup_fail
 
 if not exist "%TEMP_TXT_AUDIO%" (
-    echo [ERROR] Expected output file '%TEMP_TXT_AUDIO%' was not generated.
+    echo [ERROR] Expected output file '%TEMP_TXT_AUDIO%' was not unpacked by decoder.
     goto cleanup_fail
 )
 
