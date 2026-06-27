@@ -15,7 +15,9 @@
                 "${workspaceFolder}/sndfile.dll",
                 "-static",
                 "-o",
-                "${workspaceFolder}/main.exe"
+                "${workspaceFolder}/main.exe",
+                "-std=c++23",
+                "-lstdc++exp"
             ],
             "options": {
                 "cwd": "${workspaceFolder}",

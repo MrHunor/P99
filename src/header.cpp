@@ -11,12 +11,14 @@
 #include <stb_image_write.h>
 #include <stdexcept>
 #include <cstdint>
-#include "header.h"
 #include <algorithm>
 #include <sndfile.h>
+#include <stacktrace>
+#include <source_location>
+#include <chrono>
+
 namespace fs = std::filesystem;
 
-//test command: main.exe -v -a decode -m testfiles/soundm.wav -i testfiles/sound.wav
 using std::cin;
 using std::cout;
 using std::endl;
@@ -24,56 +26,87 @@ using std::ostream;
 using std::string;
 using std::vector;
 
+/* =========================================================0. UNIFIED LOGGER DEFINITION========================================================= */
+
+class stateClass
+{
+public:
+    int verbose = 0;
+
+    void out(const string &output, int importance, std::source_location location = std::source_location::current())
+    {
+        if (importance <= verbose) 
+        {
+            std::cout << "-> " << location.function_name() << ": " << output;
+            if (verbose >= 4) 
+            {
+                auto now = std::chrono::system_clock::now();
+                std::cout << " @" << now << "±10ms";
+            }
+            std::cout << std::endl;
+        }
+    }
+};
+
 /* =========================================================1. BASIC UTILITIES========================================================= */
 
-void InvalidInputMessage(const string &details)
+void InvalidInputMessage(const string &details = "", std::source_location location = std::source_location::current())
 {
-    cout << "-> ERR: Invalid Input\n";
-    cout << "Your Input was Invalid: " << details;
+    cout << std::stacktrace::current() << endl;
+    cout << "Filename:" << location.file_name() << endl;
+    cout << "Function:" << location.function_name() << endl;
+    cout << "Line:" << location.line() << endl;
+    cout << "Column:" << location.column() << endl;
+    if (!details.empty()) 
+    {
+        cout << "Details provided:" << details << endl;
+    }
     exit(1);
 }
 
-bool createFolder(const string &name)
+bool createFolder(const string &name, stateClass& state)
 {
-    cout << "-> FS: Create Dir " << name endo;
+    state.out("FS: Create Dir " + name, 1);
     return !fs::create_directory(name);
 }
 
-bool checkEx(const std::string &path)
+bool checkEx(const std::string &path, stateClass& state)
 {
-    cout << "-> FS: Check Exists " << path endo;
+    state.out("FS: Check Exists " + path, 1);
     return fs::exists(path);
 }
 
-vector<string> GetFilenamesFromFolder(string path)
+vector<string> GetFilenamesFromFolder(string path, stateClass& state)
 {
-    cout << "-> Dir: Scan " << path endo;
+    state.out("Dir: Scan " + path, 1);
     vector<string> PathV;
     for (const auto &entry : fs::directory_iterator(path))
     {
         PathV.push_back(entry.path().filename().string());
     }
-    cout << "-> Dir: Sort " << PathV.size() << " items" endo;
+    state.out("Dir: Sort " + ts(PathV.size()) + " items", 1);
     std::sort(PathV.begin(), PathV.end(), [](const std::string &a, const std::string &b)
-              {
-        auto getNumber = [](const std::string& s) {
-            size_t pos = 0;
-            while (pos < s.size() && isdigit(s[pos])) pos++;
-            return std::stoi(s.substr(0, pos));
+        {
+            auto getNumber = [](const std::string& s) {
+                size_t pos = 0;
+                while (pos < s.size() && isdigit(s[pos])) pos++;
+                if (pos == 0) return 0;
+                return std::stoi(s.substr(0, pos));
             };
-        return getNumber(a) < getNumber(b); });
-    cout << "-> Dir: Done" endo;
+            return getNumber(a) < getNumber(b); 
+        });
+    state.out("Dir: Done", 1);
     return PathV;
 }
 
-void ReccomendActionFilelistMismatch(const vector<string> &FileList1ORIGINAL, const vector<string> &FileList2ORIGINAL, ostream &out)
+void ReccomendActionFilelistMismatch(const vector<string> &FileList1ORIGINAL, const vector<string> &FileList2ORIGINAL, stateClass& state)
 {
-    out << "-> Act: Mismatch Check" endo;
+    state.out("Starting...", 1);
     vector<string> FileList1 = FileList1ORIGINAL;
     vector<string> FileList2 = FileList2ORIGINAL;
-    out << "Size Diffrence:\nFilelist1:" << FileList1.size() << "\nFilelist2:" << FileList2.size() endo;
+    state.out("Size Difference:\nFilelist1:" + ts(FileList1.size()) + "\nFilelist2:" + ts(FileList2.size()), 1);
     
-    out << "-> Act: Filter Match" endo;
+    state.out("Filter Match", 4);
     for (size_t i = 0; i < FileList1.size(); i++)
     {
         for (size_t z = 0; z < FileList2.size(); z++)
@@ -84,49 +117,48 @@ void ReccomendActionFilelistMismatch(const vector<string> &FileList1ORIGINAL, co
             {
                 FileList1.erase(FileList1.begin() + i);
                 FileList2.erase(FileList2.begin() + z);
-
-                --i;   // re-check new element at i
-                break; // stop using z, it's now invalid context
+                --i;  
+                break; 
             }
         }
     }
-    out << "Following images were NOT found:\nFilelist1:";
-    for (auto i : FileList1)
+    state.out("Following images were NOT found:\nFilelist1:", 1);
+    for (const auto& i : FileList1)
     {
-        out << i endo;
+       state.out(i, 1);  
     }
-    out << "Filelist2:";
-    for (auto i : FileList2)
+    state.out("Following images were NOT found:\nFilelist2:", 1);
+    for (const auto& i : FileList2)
     {
-        out << i endo;
+      state.out(i, 1); 
     }
-    out << "-> Act: Done" endo;
+    state.out("Finished", 4);
 }
 
-void CheckFilelists(const vector<string> &FileList1, const vector<string> &FileList2, ostream &out)
+void CheckFilelists(const vector<string> &FileList1, const vector<string> &FileList2, stateClass& state)
 {
-    out << "-> Check: Filelists" endo;
+    state.out("Starting", 4);
     if (FileList1.size() != FileList2.size())
     {
-        out << "-> Check: Size Mismatch" endo;
-        ReccomendActionFilelistMismatch(FileList1, FileList2, out);
+        state.out("Size Mismatch", 1);
+        ReccomendActionFilelistMismatch(FileList1, FileList2, state);
         InvalidInputMessage("Filelist size mismatch.");
     }
     
-    out << "-> Check: Loop Items" endo;
+    state.out("Looping Items", 4);
     for (size_t i = 0; i < FileList1.size(); i++)
     {
-        out << "Current mapping:Filelist1:" << FileList1[i] << "->" << FileList2[i] endo;
+        state.out("Current mapping:Filelist1:" + FileList1[i] + "->" + FileList2[i], 4);
         string modified = FileList1[i];
         modified.insert(modified.length() - 4, 1, 'M');
         if (modified != FileList2[i])
         {
-            out << "-> Check: Pair Mismatch" endo;
-            ReccomendActionFilelistMismatch(FileList1, FileList2, out);
+            state.out("Pair Mismatch", 1);
+            ReccomendActionFilelistMismatch(FileList1, FileList2, state);
             InvalidInputMessage("A Filelist Item does not match its pair. Details:\nN(Null Initialised):" + ts(i) + "\nName in Filelist 1:" + FileList1[i] + "Name in Filelist 2:" + FileList2[i]);
         }
     }
-    out << "-> Check: Done" endo;
+    state.out("Finished", 4);
 }
 
 /* =========================================================2. BIT / FILE UTILITIES========================================================= */
@@ -158,51 +190,46 @@ string BitsToAscii(const vector<bool> &bits)
     for (size_t i = 0; i < bits.size(); i += 8)
     {
         unsigned char value = 0;
-
         for (int b = 0; b < 8; ++b)
         {
             value <<= 1;
             value |= bits[i + b] ? 1 : 0;
         }
-
         result.push_back(static_cast<char>(value));
     }
     return result;
 }
 
-void ReadFileToArray(const std::string &filename, std::vector<bool> &array, ostream &out)
+void ReadFileToArray(const std::string &filename, std::vector<bool> &array, stateClass& state)
 {
-    out << "-> File: Read Array" endo;
+    state.out("Starting..", 4);
     std::ifstream file(filename, std::ios::binary);
-    if (!file)
-        throw std::runtime_error("Failed to open file");
+    if (!file) InvalidInputMessage("Failed to open file");
 
-    out << "-> File: Seek End" endo;
+    state.out("Seeking end..", 4);
     file.seekg(0, std::ios::end);
     std::streampos end = file.tellg();
-    if (end < 0)
-        throw std::runtime_error("tellg() failed");
+    if (end < 0) InvalidInputMessage("tellg failed");
 
     size_t size = static_cast<size_t>(end);
     file.seekg(0, std::ios::beg);
 
-    out << "-> File: Read Buffer" endo;
+    state.out("Reading File to Buffer...", 4);
     std::vector<char> buffer(size);
-    if (!file.read(buffer.data(), size))
-        throw std::runtime_error("Failed to read file");
+    if (!file.read(buffer.data(), size)) InvalidInputMessage("Failed to read File to Buffer");
 
-    out << "-> File: Prep Metadata" endo;
+    state.out("Preping Metadata...", 4);
     std::vector<bool> header = TextToAsciiB(filename + "|");
 
     array.clear();
-    out << "Reserving array for Size:" << header.size() + size << endl;
+    state.out("Reserving array for Size: " + ts(header.size()) + " + " + ts(size), 4);
     array.reserve(header.size() + size);
-    out << "Reserving finished" endo;
+    state.out("Reserving finished", 4);
     
-    out << "Inserting header..." endo;
+    state.out("Inserting header...", 4);
     array.insert(array.end(), header.begin(), header.end());
     
-    out << "Appending file data..." endo;
+    state.out("Appending file data...", 4);
     for (unsigned char c : buffer)
     {
         for (int bit = 7; bit >= 0; --bit)
@@ -210,12 +237,12 @@ void ReadFileToArray(const std::string &filename, std::vector<bool> &array, ostr
             array.push_back((c >> bit) & 1);
         }
     }
-    out << "-> File: Done" endo;
+    state.out("Done", 4);
 }
 
-void WriteBitsToFile(const std::string &filename, const std::vector<bool> &bits)
+void WriteBitsToFile(const std::string &filename, const std::vector<bool> &bits, stateClass& state)
 {
-    cout << "-> File: Write Bits " << filename endo;
+    state.out("File: Write Bits " + filename, 1);
     std::ofstream out(filename, std::ios::binary);
     if (!out)
     {
@@ -228,18 +255,16 @@ void WriteBitsToFile(const std::string &filename, const std::vector<bool> &bits)
     for (size_t i = 0; i < bits.size(); i += 8)
     {
         uint8_t byte = 0;
-
         for (size_t j = 0; j < 8 && (i + j) < bits.size(); ++j)
         {
             byte <<= 1;
             byte |= bits[i + j] ? 1 : 0;
         }
-
         bytes.push_back(byte);
     }
 
     out.write(reinterpret_cast<const char *>(bytes.data()), bytes.size());
-    cout << "-> File: Done" endo;
+    state.out("File: Done", 1);
 }
 
 std::uintmax_t ReadbSizeFromFile(const std::string &filename)
@@ -254,19 +279,16 @@ bool FileIs(const std::string &filename, const std::string &extension)
 
 /* =========================================================3. LOW-LEVEL IMAGE LOGIC========================================================= */
 
-
-bool WriteToImage(unsigned char *img, size_t imgSize, const vector<bool> &s, ostream &out, int &bitI, int &stringI)
+bool WriteToImage(unsigned char *img, size_t imgSize, const vector<bool> &s, stateClass& state, int &bitI, int &stringI)
 {
-    out << "-> Img: Write Bytes" endo;
+    state.out("Starting...", 4);
     auto sLength = s.size();
     while (stringI < sLength)
     {
         if (bitI >= imgSize)
         {
-            out << "-> Img: Max Size Hit" endo;
-            return 1;
+            InvalidInputMessage("Image Capacity overflow");
         }
-
         if (img[bitI] > 0 && img[bitI] < 255)
         {
             if (s[stringI] == 0)
@@ -282,13 +304,13 @@ bool WriteToImage(unsigned char *img, size_t imgSize, const vector<bool> &s, ost
         }
         bitI++;
     }
-    out << "-> Img: Write Done" endo;
+    state.out("Finished", 4);
     return 0;
 }
 
-void ReadDataFromImageC(unsigned char *imgC, unsigned char *imgR, int size, int &bitI, int &stringI, vector<bool> &decoded, ostream &out)
+void ReadDataFromImageC(unsigned char *imgC, unsigned char *imgR, int size, int &bitI, int &stringI, vector<bool> &decoded, stateClass& state)
 {
-    out << "-> Img: Read Bytes" endo;
+    state.out("Starting...", 4);
     bool end = false;
     while (!end && bitI < size)
     {
@@ -311,12 +333,12 @@ void ReadDataFromImageC(unsigned char *imgC, unsigned char *imgR, int size, int 
         }
         bitI++;
     }
-    out << "-> Img: Read Done" endo;
+    state.out("Finished", 4);
 }
 
-string ReadFilenameFromImageC(unsigned char *imgC, unsigned char *imgR, int &bitI, int &stringI, ostream &out)
+string ReadFilenameFromImageC(unsigned char *imgC, unsigned char *imgR, int &bitI, int &stringI, stateClass& state)
 {
-    out << "-> Img: Extract Filename" endo;
+    state.out("Starting...", 4);
     bool end = false;
     vector<bool> decoded;
     decoded.reserve(200);
@@ -343,151 +365,139 @@ string ReadFilenameFromImageC(unsigned char *imgC, unsigned char *imgR, int &bit
 
         bitI++;
 
-        if (decoded.size() % 8 == 0 && decoded.size() > 0)
+        if (decoded.size() % 8 == 0 && !decoded.empty())
         {
             if (BitsToAscii(decoded).find('|') != std::string::npos)
             {
                 end = true;
-                out << "-> Img: Found '|' delimiter" endo;
+                state.out("Found '|' delimiter", 4);
             }
         }
     }
-    if (decoded.size() == 0)
-        InvalidInputMessage("Encoded Filename is not readable.");
+    if (decoded.empty()) InvalidInputMessage("Encoded Filename is not readable.");
     string s = BitsToAscii(decoded);
-    out << "-> Img: Filename Extracted" endo;
+    state.out("Filename Extracted", 4);
     return s.erase(s.size() - 1, 1);
 }
 
 /* =========================================================4. HIGH-LEVEL IMAGE & FOLDER OPERATIONS========================================================= */
 
-bool EncodeImage(const string &ifilename, const string &ffilename_, ostream &out)
+bool EncodeImage(const string &ifilename, const string &ffilename_, stateClass& state)
 {
-    out << "-> EncImg: Init" endo;
-    string ffilename = ffilename_;
-    int w{}, h{}, channels{}, imgSize{}, bitI{}, stringI{};
-    vector<bool> array;
+   state.out("Starting...", 4);
+   string ffilename = ffilename_;
+   int w{}, h{}, channels{}, imgSize{}, bitI{}, stringI{};
+   vector<bool> array;
     
-    out << "\nLoading image '" << ifilename << "'...\n";
-    unsigned char *img = stbi_load(ifilename.c_str(), &w, &h, &channels, 3);
-    imgSize = w * h * 3;
+   state.out("Loading image '" + ifilename + "...", 1);
+   unsigned char *img = stbi_load(ifilename.c_str(), &w, &h, &channels, 3);
+   imgSize = w * h * 3;
 
-    if (!img)
-        InvalidInputMessage();
+   if (!img) InvalidInputMessage("Failed to load image context.");
         
-    out << "-> EncImg: User Input Check" endo;
-    if (ffilename == "")
-    {
-        cout << "Enter the containing Filename:";
-        cin >> ffilename;
-    }
+   state.out("User Input Check", 4);
+   if (ffilename == "")
+   {
+       cout << "Enter the containing Filename:";
+       cin >> ffilename;
+   }
     
-    out << "-> EncImg: File Check" endo;
-    if (!checkEx(ffilename))
-        InvalidInputMessage("This file does not exist");
-        
-    out << "Reserving array for Size:" << ReadbSizeFromFile(ffilename) << endl;
-    ReadFileToArray(ffilename, array, out);
+   ReadFileToArray(ffilename, array, state);
 
-    out << "-> EncImg: Capacity Check" endo;
-    if (array.size() > imgSize)
-    {
-        InvalidInputMessage("Given File is too big to encode. Encoding File size=" + std::to_string(array.size()) + "; imageSize" + std::to_string(imgSize));
-        stbi_image_free(img);
-        return 1;
-    }
+   state.out("Checking capacity", 4);
+   if (array.size() > imgSize)
+   {
+       InvalidInputMessage("Given File is too big to encode. Encoding File size=" + std::to_string(array.size()) + "; imageSize" + std::to_string(imgSize));
+       stbi_image_free(img);
+       return 1;
+   }
     
-    out << "Writing to Image (Memory)..." endo;
-    out << "ARRAY Size:" << array.size() << "bit/" << array.size() / 8 << "Bytes" endo;
-    WriteToImage(img, imgSize, array, out, bitI, stringI);
+   state.out("Writing to Image (Memory)...", 1);
+   state.out("ARRAY Size:" + ts(array.size()) + "bit/" + ts(array.size() / 8) + "Bytes", 4);
+   WriteToImage(img, imgSize, array, state, bitI, stringI);
     
-    out << "Writing to Image (Disk)..." endo;
-    stbi_write_png("output.png", w, h, 3, img, 3 * w);
+   state.out("Writing to Image (Disk)...", 1);
+   stbi_write_png("output.png", w, h, 3, img, 3 * w);
     
-    out << "Freeing Memory..." endo;
-    stbi_image_free(img);
+   state.out("Freeing Memory...", 4);
+   stbi_image_free(img);
     
-    out << "-> EncImg: Complete" endo;
-    return 0;
+   state.out("Finished", 4);
+   return 0;
 }
 
-bool DecodeImage(const string &mFilename, const string &ffilename_, ostream &out)
+bool DecodeImage(const string &mFilename, const string &ffilename_, stateClass& state)
 {
-    out << "-> DecImg: Init" endo;
+    state.out("Starting...", 1);
     string ffilename = ffilename_;
     int w{}, h{}, channels{}, bitI{}, stringI{};
     string Filename{};
     vector<bool> decoded;
 
-    out << "-> DecImg: Load Mod Img" endo;
+    state.out("Load Mod Img", 1);
     unsigned char *imgR = stbi_load(mFilename.c_str(), &w, &h, &channels, 3); 
-    if (!imgR)
-        return 1;
+    if (!imgR) return 1;
         
-    out << "-> DecImg: User Input Check" endo;
+    state.out("User Input Check", 4);
     if (ffilename == "")
     {
         cout << "Enter Original Filename:";
         cin >> ffilename;
     }
-    if (!checkEx(ffilename))
-        InvalidInputMessage("");
+    if (!checkEx(ffilename, state)) InvalidInputMessage("Target missing.");
 
-    out << "-> DecImg: Load Orig Img" endo;
+    state.out("Load Orig Img", 1);
     unsigned char *imgC = stbi_load(ffilename.c_str(), &w, &h, &channels, 3);
-    if (!imgC)
-        return 1;
+    if (!imgC) return 1;
 
-    out << "-> DecImg: Extract Filename" endo;
-    Filename = ReadFilenameFromImageC(imgC, imgR, bitI, stringI, out);
-    out << "Read Filename:" << Filename endo;
-    out << "Channels:" << channels endo;
+    state.out("Extract Filename", 1);
+    Filename = ReadFilenameFromImageC(imgC, imgR, bitI, stringI, state);
+    state.out("Read Filename:" + Filename, 1);
+    state.out("Channels:" + std::to_string(channels), 4);
     
-    out << "-> DecImg: Read Bytes" endo;
-    ReadDataFromImageC(imgC, imgR, (w * h * channels), bitI, stringI, decoded, out);
+    state.out("Read Bytes", 1);
+    ReadDataFromImageC(imgC, imgR, (w * h * channels), bitI, stringI, decoded, state);
 
-    out << "-> DecImg: Write Output" endo;
-    WriteBitsToFile(Filename, decoded);
+    state.out("Write Output", 1);
+    WriteBitsToFile(Filename, decoded, state);
 
-    out << "-> DecImg: Free Mem" endo;
+    state.out("Free Mem", 4);
     stbi_image_free(imgR);
     stbi_image_free(imgC);
     
-    out << "-> DecImg: Complete" endo;
+    state.out("Complete", 1);
     return 0;
 }
 
-bool EncodeImageFolder(const string &ifoldername, const string &ffilename_, ostream &out)
+bool EncodeImageFolder(const string &ifoldername, const string &ffilename_, stateClass& state)
 {
-    out << "-> EncFolder: Init" endo;
-    vector<string> FileList = GetFilenamesFromFolder(ifoldername);
+    state.out("Init", 1);
+    vector<string> FileList = GetFilenamesFromFolder(ifoldername, state);
     vector<bool> array, aChunk;
     string fullPath{}, mfoldername{};
     string ffilename = ffilename_;
     int w{}, inputSize{}, h{}, channels{}, bitcounter{}, NIL{}, bitI{}, stringI{}, offset{};
 
     mfoldername = ifoldername + "M";
-    out << "-> EncFolder: Create M-Dir" endo;
-    createFolder(mfoldername);
+    state.out("Create M-Dir", 1);
+    createFolder(mfoldername, state);
     
     if (ffilename == "")
     {
         cout << "Enter Encoding Filename:";
         cin >> ffilename;
     }
-    if (!checkEx(ffilename))
-        InvalidInputMessage("The File you specified does not exist or could not be found");
+    if (!checkEx(ffilename, state)) InvalidInputMessage("The File you specified does not exist or could not be found");
         
-    out << "-> EncFolder: Read File" endo;
-    ReadFileToArray(ffilename, array, out);
+    state.out("Read File", 1);
+    ReadFileToArray(ffilename, array, state);
     inputSize = array.size();
-    out << "ARRAY Size:" << array.size() << "bit/" << array.size() / 8 << "Bytes" endo;
+    state.out("ARRAY Size:" + std::to_string(array.size()) + "bit/" + std::to_string(array.size() / 8) + "Bytes", 4);
 
-    out << "Calculating NIL..." endo; 
+    state.out("Calculating NIL...", 1); 
     for (int i = 0; bitcounter < inputSize; i++)
     {
-        if (i >= FileList.size())
-            InvalidInputMessage("Not enough images to store data.\n Bitcounter:" + std::to_string(bitcounter) + ".\ninputSize:" + std::to_string(inputSize));
+        if (i >= FileList.size()) InvalidInputMessage("Not enough images to store data.\n Bitcounter:" + std::to_string(bitcounter) + ".\ninputSize:" + std::to_string(inputSize));
 
         fullPath = ifoldername + "\\" + FileList[i];
         stbi_info(fullPath.c_str(), &w, &h, &channels);
@@ -495,42 +505,42 @@ bool EncodeImageFolder(const string &ifoldername, const string &ffilename_, ostr
         bitcounter += (w * h * channels);
         NIL = i + 1;
     }
-    out << "Expected NIL" << NIL << "/" << FileList.size() endo;
+    state.out("Expected NIL" + std::to_string(NIL) + "/" + std::to_string(FileList.size()), 4);
     
-    out << "-> EncFolder: Loop Files" endo;
+    state.out("Loop Files", 1);
     for (size_t i = 0; i < NIL; i++)
     {
-        out << "Iteration:" << i << "/" << NIL endo;
+        state.out("Iteration:" + std::to_string(i) + "/" + std::to_string(NIL), 4);
         fullPath = ifoldername + "\\" + FileList[i];
         unsigned char *img = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
         
-        out << "Assigning Chunk of Size:" << (w * h * channels) endo;
+        state.out("Assigning Chunk of Size:" + std::to_string(w * h * channels), 4);
         int capacity = w * h * channels;
         int chunkSize = std::min((int)array.size() - offset, capacity);
         aChunk.assign(array.begin() + offset, array.begin() + chunkSize + offset);
         
         bitI = 0;
         stringI = 0;
-        out << "Writing to Image (Memory)..." endo;
-        WriteToImage(img, (w * h * channels), aChunk, out, bitI, stringI);
-        out << "Actual Chunk Size:" << stringI endo;
+        state.out("Writing to Image (Memory)...", 1);
+        WriteToImage(img, (w * h * channels), aChunk, state, bitI, stringI);
+        state.out("Actual Chunk Size:" + std::to_string(stringI), 4);
         offset = offset + stringI;
         
         fullPath = mfoldername + "\\" + FileList[i].insert(FileList[i].length() - 4, 1, 'M');
-        out << "Writing to Image (Disk)..." endo;
+        state.out("Writing to Image (Disk)...", 1);
         stbi_write_png(fullPath.c_str(), w, h, channels, img, channels * w);
         
-        out << "Freeing Memory..." endo;
+        state.out("Freeing Memory...", 4);
         stbi_image_free(img);
     }
 
-    out << "-> EncFolder: Complete" endo;
+    state.out("Complete", 1);
     return 0;
 }
 
-bool DecodeImageFolder(const string &mFoldername, const string &iFoldername_, ostream &out)
+bool DecodeImageFolder(const string &mFoldername, const string &iFoldername_, stateClass& state)
 {
-    out << "-> DecFolder: Init" endo;
+    state.out("Init", 1);
     unsigned char *imgO{};
     unsigned char *imgE{};
     int w{}, h{}, channels{}, stringI{}, bitI{};
@@ -544,36 +554,35 @@ bool DecodeImageFolder(const string &mFoldername, const string &iFoldername_, os
         cout << "Enter Original Foldername:";
         cin >> iFoldername;
     }
-    if (!checkEx(iFoldername))
-        InvalidInputMessage("");
+    if (!checkEx(iFoldername, state)) InvalidInputMessage("Original source folder missing.");
 
-    out << "-> DecFolder: Get Lists" endo;
-    eFileList = GetFilenamesFromFolder(mFoldername);
-    oFileList = GetFilenamesFromFolder(iFoldername);
+    state.out("Get Lists", 1);
+    eFileList = GetFilenamesFromFolder(mFoldername, state);
+    oFileList = GetFilenamesFromFolder(iFoldername, state);
 
-    CheckFilelists(oFileList, eFileList, out);
+    CheckFilelists(oFileList, eFileList, state);
 
-    out << "-> DecFolder: Load Primary" endo;
+    state.out("Load Primary", 1);
     fullPath = iFoldername + "\\" + oFileList[0];
     imgO = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
 
     fullPath = mFoldername + "\\" + eFileList[0];
     imgE = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
 
-    out << "-> DecFolder: Extract Name" endo;
-    filename = ReadFilenameFromImageC(imgO, imgE, bitI, stringI, out);
-    out << "Filename:" << filename endo;
+    state.out("Extract Name", 1);
+    filename = ReadFilenameFromImageC(imgO, imgE, bitI, stringI, state);
+    state.out("Filename:" + filename, 1);
     
-    out << "Reading remaining Data from the first image..." endo;
-    ReadDataFromImageC(imgO, imgE, (w * h * channels), bitI, stringI, decoded, out);
-    out << "Freeing memory.." endo;
+    state.out("Reading remaining Data from the first image...", 4);
+    ReadDataFromImageC(imgO, imgE, (w * h * channels), bitI, stringI, decoded, state);
+    state.out("Freeing memory..", 4);
     stbi_image_free(imgO);
     stbi_image_free(imgE);
 
-    out << "Reading Data from the remaining Images..." endo;
+    state.out("Reading Data from the remaining Images...", 4);
     for (size_t i = 1; i < eFileList.size(); i++)
     {
-        out << "Iteration:" << i << "/" << eFileList.size() endo;
+        state.out("Iteration:" + std::to_string(i) + "/" + std::to_string(eFileList.size()), 4);
         stringI = 0;
         bitI = 0;
         decodedBuffer.clear();
@@ -581,26 +590,26 @@ bool DecodeImageFolder(const string &mFoldername, const string &iFoldername_, os
         imgO = stbi_load((iFoldername + "\\" + oFileList[i]).c_str(), &w, &h, &channels, 3);
         imgE = stbi_load((mFoldername + "\\" + eFileList[i]).c_str(), &w, &h, &channels, 3);
 
-        ReadDataFromImageC(imgO, imgE, (w * h * channels), bitI, stringI, decodedBuffer, out);
+        ReadDataFromImageC(imgO, imgE, (w * h * channels), bitI, stringI, decodedBuffer, state);
         decoded.insert(decoded.end(), decodedBuffer.begin(), decodedBuffer.end());
 
         stbi_image_free(imgO);
         stbi_image_free(imgE);
     }
     
-    out << "Size of Read data:" << decoded.size() endo;
-    out << "Writing to File...";
-    WriteBitsToFile(filename, decoded);
+    state.out("Size of Read data:" + std::to_string(decoded.size()), 4);
+    state.out("Writing to File...", 1);
+    WriteBitsToFile(filename, decoded, state);
     
-    out << "-> DecFolder: Complete" endo;
+    state.out("Complete", 1);
     return 0;
 }
 
 /* =========================================================5. LOW-LEVEL WAV LOGIC========================================================= */
 
-void ReadDataFromWavC(float *mSampleData, float *iSampleData, int &bitI, int stringI, vector<bool> &decoded, ostream &out)
+void ReadDataFromWavC(float *mSampleData, float *iSampleData, int &bitI, int stringI, vector<bool> &decoded, stateClass& state)
 {
-    out << "-> WavC: Read F32" endo;
+    state.out("Read F32", 1);
     bool end = false;
     while (!end)
     {
@@ -622,12 +631,12 @@ void ReadDataFromWavC(float *mSampleData, float *iSampleData, int &bitI, int str
             }
         }
     }
-    out << "-> WavC: F32 Done" endo;
+    state.out("F32 Done", 4);
 }
 
-string ReadFilenameFromWavC(vector<short> &mbuffer, vector<short> &ibuffer, int& bitI, int& stringI, ostream &out)
+string ReadFilenameFromWavC(vector<short> &mbuffer, vector<short> &ibuffer, int& bitI, int& stringI, stateClass& state)
 {
-    out << "-> WavC: Extract Filename" endo;
+    state.out("Extract Filename", 1);
     bool end = false;
     vector<bool> decoded;
     decoded.reserve(200);
@@ -654,25 +663,24 @@ string ReadFilenameFromWavC(vector<short> &mbuffer, vector<short> &ibuffer, int&
 
         bitI++;
 
-        if (decoded.size() % 8 == 0 && decoded.size() > 0)
+        if (decoded.size() % 8 == 0 && !decoded.empty())
         {
             if (BitsToAscii(decoded).find('|') != std::string::npos)
             {
                 end = true;
-                out << "-> WavC: Found '|' delimiter" endo;
+                state.out("Found '|' delimiter", 4);
             }
         }
     }
-    if (decoded.size() == 0)
-        InvalidInputMessage("Encoded Filename is not readable.");
+    if (decoded.empty()) InvalidInputMessage("Encoded Filename is not readable.");
     string s = BitsToAscii(decoded);
-    out << "-> WavC: Filename Extracted" endo;
+    state.out("Filename Extracted", 4);
     return s.erase(s.size() - 1, 1);
 }
 
-void ReadDataFromWavC(vector<short>& mbuffer, vector<short>& ibuffer, int &bitI, int& stringI, vector<bool>& decoded, ostream &out)
+void ReadDataFromWavC(vector<short>& mbuffer, vector<short>& ibuffer, int &bitI, int& stringI, vector<bool>& decoded, stateClass& state)
 {
-    out << "-> WavC: Read I16 Data" endo;
+    state.out("Read I16 Data", 1);
     bool end = false;
     while (!end)
     {
@@ -693,17 +701,16 @@ void ReadDataFromWavC(vector<short>& mbuffer, vector<short>& ibuffer, int &bitI,
                 end = true;
             }
         }
-
         bitI++;
     }
-    out << "-> WavC: I16 Done" endo;
+    state.out("I16 Done", 4);
 }
 
 /* =========================================================6. HIGH-LEVEL WAV OPERATIONS =========================================================== */
 
-bool EncodeWav(const string &ifilename, const string &ffilename, ostream &out)
+bool EncodeWav(const string &ifilename, const string &ffilename, stateClass& state)
 {
-    out << "-> EncWav: Init" endo;
+    state.out("Init", 1);
     string mfilename = ifilename;
     mfilename.insert(mfilename.length() - 4, "M");
     int bitI = 0;
@@ -717,33 +724,30 @@ bool EncodeWav(const string &ifilename, const string &ffilename, ostream &out)
     SF_INFO sfinfo;
     sfinfo.format = 0;
 
-    out << "-> EncWav: Open Input" endo;
+    state.out("Open Input", 1);
     SNDFILE *infline = sf_open(ifilename.c_str(), SFM_READ, &sfinfo);
     originalFrames = sfinfo.frames;
-    if (!infline)
-        InvalidInputMessage("Coudnt open file input file");
+    if (!infline) InvalidInputMessage("Could not open input file");
         
-    out << "Details:" endo;
-    out << "Sample Rate:" << sfinfo.samplerate << "Hz" endo;
-    out << "Channels   :" << sfinfo.channels endo;
-    out << "Frames     :" << sfinfo.frames endo;
+    state.out("Details:", 4);
+    state.out("Sample Rate:" + std::to_string(sfinfo.samplerate) + "Hz", 4);
+    state.out("Channels   :" + std::to_string(sfinfo.channels), 4);
+    state.out("Frames     :" + std::to_string(sfinfo.frames), 4);
     
     totalSamples = sfinfo.frames * sfinfo.channels;
-    out << "-> EncWav: Resize Buffer" endo;
+    state.out("Resize Buffer", 4);
     buffer.resize(totalSamples);
     
-    out << "-> EncWav: Read SF" endo;
+    state.out("Read SF", 1);
     framesRead = sf_readf_short(infline, buffer.data(), sfinfo.frames);
-    if (framesRead != sfinfo.frames)
-        InvalidInputMessage("Read Frame Count does not match expected Frame Count\nRead Frame Count" + ts(framesRead) + "\nExpected:" + ts(sfinfo.frames));
+    if (framesRead != sfinfo.frames) InvalidInputMessage("Read Frame Count does not match expected Frame Count\nRead Frame Count" + ts(framesRead) + "\nExpected:" + ts(sfinfo.frames));
     sf_close(infline);
     
-    out << "-> EncWav: Read Payload" endo;
-    ReadFileToArray(ffilename, fromarray, out);
-    if (fromarray.size() >= totalSamples)
-        InvalidInputMessage("\nThe File specified does not contain enough space to encode\nCapacity:" + ts(totalSamples) + "\nFilesize:" + ts(fromarray.size()));
+    state.out("Read Payload", 1);
+    ReadFileToArray(ffilename, fromarray, state);
+    if (fromarray.size() >= totalSamples) InvalidInputMessage("\nThe File specified does not contain enough space to encode\nCapacity:" + ts(totalSamples) + "\nFilesize:" + ts(fromarray.size()));
         
-    out << "Writing... (memory)" endo;
+    state.out("Writing... (memory)", 1);
     while (bitI < totalSamples && stringI < fromarray.size())
     {
         if (std::abs(buffer[bitI]) < 32767 && buffer[bitI] != 0)
@@ -761,24 +765,22 @@ bool EncodeWav(const string &ifilename, const string &ffilename, ostream &out)
         bitI++;
     }
     
-    out << "-> EncWav: Open Output" endo;
+    state.out("Open Output", 1);
     SNDFILE *outfile = sf_open(mfilename.c_str(), SFM_WRITE, &sfinfo);
-    if (!outfile)
-        InvalidInputMessage("Coudnt open output File");
+    if (!outfile) InvalidInputMessage("Could not open output File");
         
-    out << "Wrtining ... (disk)" endo;
+    state.out("Writing ... (disk)", 1);
     framesWritten = sf_writef_short(outfile, buffer.data(), originalFrames);
-    if (framesWritten != originalFrames)
-        InvalidInputMessage("Written Frame Count does not match expected Frame Count");
+    if (framesWritten != originalFrames) InvalidInputMessage("Written Frame Count does not match expected Frame Count");
     sf_close(outfile);
     
-    out << "-> EncWav: Complete" endo;
+    state.out("Complete", 1);
     return 0;
 }
 
-bool DecodeWav(const string &mFilename, const string &iFilename, ostream &out)
+bool DecodeWav(const string &mFilename, const string &iFilename, stateClass& state)
 {
-    out << "-> DecWav: Init" endo;
+    state.out("Init", 1);
     int bitI = 0;
     int stringI = 0;
     string ffilename;
@@ -788,51 +790,50 @@ bool DecodeWav(const string &mFilename, const string &iFilename, ostream &out)
     SF_INFO msfInfo;
     SF_INFO isfInfo;
     
-    out << "-> DecWav: Open Mod" endo;
+    state.out("Open Mod", 1);
     SNDFILE *mfile = sf_open(mFilename.c_str(), SFM_READ, &msfInfo);
-    out << "-> DecWav: Open Orig" endo;
+    state.out("Open Orig", 1);
     SNDFILE *ifile = sf_open(iFilename.c_str(), SFM_READ, &isfInfo);
-    if (!mfile || !ifile) InvalidInputMessage("Coudnt Open File");
+    if (!mfile || !ifile) InvalidInputMessage("Could not open files.");
     
-    out << "-> DecWav: Resize Buffers" endo;
+    state.out("Resize Buffers", 4);
     mbuffer.resize(msfInfo.channels * msfInfo.frames);
     ibuffer.resize(isfInfo.channels * isfInfo.frames);
     
-    out << "-> DecWav: Read SF" endo;
+    state.out("Read SF", 1);
     sf_readf_short(mfile, mbuffer.data(), msfInfo.frames);
     sf_readf_short(ifile, ibuffer.data(), isfInfo.frames);
-    if (mbuffer.empty() || ibuffer.empty()) InvalidInputMessage("Coudnt read Files to Memory");
-    out << "Read Files successfully into Memory" endo;
+    if (mbuffer.empty() || ibuffer.empty()) InvalidInputMessage("Could not read Files to Memory");
+    state.out("Read Files successfully into Memory", 1);
     
-    out << "-> DecWav: Validate Sizes" endo;
-    if (msfInfo.frames * msfInfo.channels != isfInfo.frames * isfInfo.channels)
-        InvalidInputMessage("Sample amounts do not match, indicating file corruption or wrong file selection");
-    out << "Sample sizes match:\nmSamplesize:" << msfInfo.frames * msfInfo.channels << "\niSampleSize:" << isfInfo.frames * isfInfo.channels endo;
+    state.out("Validate Sizes", 1);
+    if (msfInfo.frames * msfInfo.channels != isfInfo.frames * isfInfo.channels) InvalidInputMessage("Sample amounts do not match, indicating file corruption or wrong file selection");
+    state.out("Sample sizes match:\nmSamplesize:" + std::to_string(msfInfo.frames * msfInfo.channels) + "\niSampleSize:" + std::to_string(isfInfo.frames * isfInfo.channels), 4);
 
-    out << "-> DecWav: Find Non-Zero" endo;
+    state.out("Find Non-Zero", 4);
     for (; bitI < mbuffer.size(); ++bitI) {
         if (mbuffer[bitI] != 0) {
             break; 
         }
     }
-    out << "First non zero Sample at:" << bitI endo;
+    state.out("First non zero Sample at:" + std::to_string(bitI), 4);
     
-    out << "First ten samples:" endo;
+    state.out("First ten samples:", 4);
     for (size_t i = bitI; i < 10 + bitI; i++)
     {
-        out << "n:" << i << " | mbuffer:" << mbuffer[i] << " | ibuffer:" << ibuffer[i] endo;
+        state.out("n:" + std::to_string(i) + " | mbuffer:" + std::to_string(mbuffer[i]) + " | ibuffer:" + std::to_string(ibuffer[i]), 4);
     }
     
-    out << "-> DecWav: Read Filename" endo;
-    ffilename = ReadFilenameFromWavC(mbuffer, ibuffer, bitI, stringI, out);
-    out << "Decoded filename:" << ffilename endo;
+    state.out("Read Filename", 1);
+    ffilename = ReadFilenameFromWavC(mbuffer, ibuffer, bitI, stringI, state);
+    state.out("Decoded filename:" + ffilename, 1);
     
-    out << "-> DecWav: Read Data" endo;
-    ReadDataFromWavC(mbuffer, ibuffer, bitI, stringI, decoded, out);
+    state.out("Read Data", 1);
+    ReadDataFromWavC(mbuffer, ibuffer, bitI, stringI, decoded, state);
     
-    out << "Writing to file" endo;
-    WriteBitsToFile(ffilename, decoded);
+    state.out("Writing to file", 1);
+    WriteBitsToFile(ffilename, decoded, state);
     
-    out << "-> DecWav: Complete" endo;
+    state.out("Complete", 1);
     return 0;
 }
