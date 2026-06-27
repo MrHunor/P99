@@ -1,16 +1,12 @@
-# P99 - Text into Image Steganography (AI Generated Overview) © 2026 MrHunor, GPLv3
-
-
-
-P99 is a lightweight, command-line tool written in C++ that allows you to hide files inside `.png` images and extract them later. It utilizes the `CLI11` library for clean and robust command-line argument parsing and the stb libary for handling images.
+# P99 - File to Media File Steganography (AI Generated Overview) © 2026 MrHunor, GPLv3
 
 
 
 ## Features
 
- Encode Text: Hide confidential or arbitrary files directly within the pixel data of a PNG image.
+ Encode File: Hide confidential or arbitrary files directly within the pixel data of a PNG image.
 
- Decode Text: Extract previously hidden files from a modified PNG image.
+ Decode File: Extract previously hidden files from a modified PNG image.
 
  Command Line Interface: Uses `CLI11` for structured arguments and help menus.
 
