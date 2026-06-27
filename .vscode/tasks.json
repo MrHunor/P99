@@ -8,18 +8,17 @@
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
-                "${fileDirname}\\*.cpp",
-                "-IC:/libarys/stb",
-                "-IC:/libarys/CLI11",
-                "-IC:/libarys/libsndfile/include",
-                "-LC:/libarys/libsndfile/lib",
-                "-lsndfile",
+                "${workspaceFolder}/src/*.cpp",
+                "-I${workspaceFolder}/include/stb",
+                "-I${workspaceFolder}/include/CLI11",
+                "-I${workspaceFolder}/include/libsndfile/include",
+                "${workspaceFolder}/sndfile.dll",
+                "-static",
                 "-o",
-                "${fileDirname}\\main.exe",
-                "-static"
+                "${workspaceFolder}/main.exe"
             ],
             "options": {
-                "cwd": "${fileDirname}",
+                "cwd": "${workspaceFolder}",
                 "env": {
                     "PATH": "C:\\msys64\\ucrt64\\bin;${env:PATH}"
                 }

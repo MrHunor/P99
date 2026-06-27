@@ -4,9 +4,9 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "C:/libarys/stb/",
-                "C:/libarys/CLI11",
-                "C:/libarys/libsndfile/include"
+                "${workspaceFolder}/include/stb",
+                "${workspaceFolder}/include/CLI11",
+                "${workspaceFolder}/include/libsndfile/include"
             ],
             "defines": [],
             "compilerPath": "C:/msys64/ucrt64/bin/gcc.exe",
