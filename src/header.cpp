@@ -16,7 +16,7 @@
 #include <stacktrace>
 #include <source_location>
 #include <chrono>
-
+#include "header.h"
 namespace fs = std::filesystem;
 
 using std::cin;
@@ -26,31 +26,11 @@ using std::ostream;
 using std::string;
 using std::vector;
 
-/* =========================================================0. UNIFIED LOGGER DEFINITION========================================================= */
 
-class stateClass
-{
-public:
-    int verbose = 0;
-
-    void out(const string &output, int importance, std::source_location location = std::source_location::current())
-    {
-        if (importance <= verbose) 
-        {
-            std::cout << "-> " << location.function_name() << ": " << output;
-            if (verbose >= 4) 
-            {
-                auto now = std::chrono::system_clock::now();
-                std::cout << " @" << now << "±10ms";
-            }
-            std::cout << std::endl;
-        }
-    }
-};
 
 /* =========================================================1. BASIC UTILITIES========================================================= */
 
-void InvalidInputMessage(const string &details = "", std::source_location location = std::source_location::current())
+void InvalidInputMessage(const string &details, std::source_location location)
 {
     cout << std::stacktrace::current() << endl;
     cout << "Filename:" << location.file_name() << endl;
@@ -283,11 +263,14 @@ bool WriteToImage(unsigned char *img, size_t imgSize, const vector<bool> &s, sta
 {
     state.out("Starting...", 4);
     auto sLength = s.size();
+    state.out("Starting loop...",4);
     while (stringI < sLength)
     {
+   // state.out("\nimgSize:"+ts(imgSize)+"\nbitI:"+ts(bitI)+"\nstringI"+ts(stringI)+"\n",4);
         if (bitI >= imgSize)
         {
-            InvalidInputMessage("Image Capacity overflow");
+            state.out("Image Capacity overflow\nimgSize:"+ts(imgSize)+"\nBitI:"+ts(bitI)+"\nstringI:"+ts(stringI)+"\nMeaning that there were only "+ts(stringI)+"/"+ts(bitI)+" bits of the image written too",4);
+            return 0;
         }
         if (img[bitI] > 0 && img[bitI] < 255)
         {
@@ -390,7 +373,7 @@ bool EncodeImage(const string &ifilename, const string &ffilename_, stateClass& 
    vector<bool> array;
     
    state.out("Loading image '" + ifilename + "...", 1);
-   unsigned char *img = stbi_load(ifilename.c_str(), &w, &h, &channels, 3);
+   unsigned char *img = stbi_load(ifilename.c_str(), &w, &h, &channels,0);
    imgSize = w * h * 3;
 
    if (!img) InvalidInputMessage("Failed to load image context.");
@@ -435,7 +418,7 @@ bool DecodeImage(const string &mFilename, const string &ffilename_, stateClass& 
     vector<bool> decoded;
 
     state.out("Load Mod Img", 1);
-    unsigned char *imgR = stbi_load(mFilename.c_str(), &w, &h, &channels, 3); 
+    unsigned char *imgR = stbi_load(mFilename.c_str(), &w, &h, &channels, 0); 
     if (!imgR) return 1;
         
     state.out("User Input Check", 4);
@@ -512,7 +495,7 @@ bool EncodeImageFolder(const string &ifoldername, const string &ffilename_, stat
     {
         state.out("Iteration:" + std::to_string(i) + "/" + std::to_string(NIL), 4);
         fullPath = ifoldername + "\\" + FileList[i];
-        unsigned char *img = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
+        unsigned char *img = stbi_load(fullPath.c_str(), &w, &h, &channels, 0);
         
         state.out("Assigning Chunk of Size:" + std::to_string(w * h * channels), 4);
         int capacity = w * h * channels;
@@ -533,7 +516,14 @@ bool EncodeImageFolder(const string &ifoldername, const string &ffilename_, stat
         state.out("Freeing Memory...", 4);
         stbi_image_free(img);
     }
+    if(state.deleteOverflow)
+    {
+    for(int i = NIL; i< FileList.size(); i++)
+    {
+    remove(FileList[i].c_str());
+    }
 
+    }
     state.out("Complete", 1);
     return 0;
 }
@@ -564,10 +554,10 @@ bool DecodeImageFolder(const string &mFoldername, const string &iFoldername_, st
 
     state.out("Load Primary", 1);
     fullPath = iFoldername + "\\" + oFileList[0];
-    imgO = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
+    imgO = stbi_load(fullPath.c_str(), &w, &h, &channels, 0);
 
     fullPath = mFoldername + "\\" + eFileList[0];
-    imgE = stbi_load(fullPath.c_str(), &w, &h, &channels, 3);
+    imgE = stbi_load(fullPath.c_str(), &w, &h, &channels, 0);
 
     state.out("Extract Name", 1);
     filename = ReadFilenameFromImageC(imgO, imgE, bitI, stringI, state);

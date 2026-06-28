@@ -14,21 +14,23 @@ set "SRC_AUDIO=testfiles\sound.wav"
 set "IMAGES_ORIG_DIR=testfiles\imagesOriginal"
 set "SINGLE_ORIG_IMG=%IMAGES_ORIG_DIR%\1.png"
 
+:: Temporary decoded payload outputs
 set "TEMP_TXT=temp_test.txt"
 set "TEMP_VID=temp_video.mp4"
 set "TEMP_TXT_AUDIO=temp_audio_test.txt"
 
-:: Modified outputs implicitly named by the application ('M' appended)
-set "SINGLE_OUT_IMG=%IMAGES_ORIG_DIR%\1M.png"
+:: Real target outputs based on application's naming convention
+set "SINGLE_OUT_IMG=output.png"
 set "FOLDER_OUT_DIR=%IMAGES_ORIG_DIR%M"
 set "SINGLE_OUT_AUDIO=testfiles\soundM.wav"
 
-:: Initial Cleanup
+:: Initial Cleanup to avoid false positives
 if exist "%TEMP_TXT%" del /q "%TEMP_TXT%"
 if exist "%TEMP_VID%" del /q "%TEMP_VID%"
 if exist "%TEMP_TXT_AUDIO%" del /q "%TEMP_TXT_AUDIO%"
 if exist "%SINGLE_OUT_IMG%" del /q "%SINGLE_OUT_IMG%"
 if exist "%FOLDER_OUT_DIR%" rmdir /s /q "%FOLDER_OUT_DIR%"
+if exist "%SINGLE_OUT_AUDIO%" del /q "%SINGLE_OUT_AUDIO%"
 
 echo.
 echo --- TEST 1: Single Image Mode (TXT) ---
@@ -45,7 +47,7 @@ echo [CMD] %EXE% -vvvv -m decode --modified "%SINGLE_OUT_IMG%" --original "%SING
 if %ERRORLEVEL% neq 0 goto cleanup_fail
 
 if not exist "%TEMP_TXT%" (
-    echo [ERROR] Expected output file '%TEMP_TXT%' was not unpacked by decoder.
+    echo [ERROR] Expected output file '%TEMP_TXT%' was not recreated by the decoder.
     goto cleanup_fail
 )
 
@@ -82,7 +84,7 @@ echo [CMD] %EXE% -vvvv -m decode --modified "%FOLDER_OUT_DIR%" --original "%IMAG
 if %ERRORLEVEL% neq 0 goto cleanup_fail
 
 if not exist "%TEMP_VID%" (
-    echo [ERROR] Expected output file '%TEMP_VID%' was not unpacked by decoder.
+    echo [ERROR] Expected output file '%TEMP_VID%' was not recreated by the decoder.
     goto cleanup_fail
 )
 
@@ -119,7 +121,7 @@ echo [CMD] %EXE% -vvvv -a decode --modified "%SINGLE_OUT_AUDIO%" --original "%SR
 if %ERRORLEVEL% neq 0 goto cleanup_fail
 
 if not exist "%TEMP_TXT_AUDIO%" (
-    echo [ERROR] Expected output file '%TEMP_TXT_AUDIO%' was not unpacked by decoder.
+    echo [ERROR] Expected output file '%TEMP_TXT_AUDIO%' was not recreated by the decoder.
     goto cleanup_fail
 )
 
@@ -149,6 +151,7 @@ if exist "%TEMP_VID%" del /q "%TEMP_VID%"
 if exist "%TEMP_TXT_AUDIO%" del /q "%TEMP_TXT_AUDIO%"
 if exist "%SINGLE_OUT_IMG%" del /q "%SINGLE_OUT_IMG%"
 if exist "%FOLDER_OUT_DIR%" rmdir /s /q "%FOLDER_OUT_DIR%"
+if exist "%SINGLE_OUT_AUDIO%" del /q "%SINGLE_OUT_AUDIO%"
 echo ===================================================
 echo STATUS: SUCCESS
 echo ===================================================
@@ -162,6 +165,7 @@ if exist "%TEMP_VID%" del /q "%TEMP_VID%"
 if exist "%TEMP_TXT_AUDIO%" del /q "%TEMP_TXT_AUDIO%"
 if exist "%SINGLE_OUT_IMG%" del /q "%SINGLE_OUT_IMG%"
 if exist "%FOLDER_OUT_DIR%" rmdir /s /q "%FOLDER_OUT_DIR%"
+if exist "%SINGLE_OUT_AUDIO%" del /q "%SINGLE_OUT_AUDIO%"
 echo ===================================================
 echo STATUS: FAILED
 echo ===================================================

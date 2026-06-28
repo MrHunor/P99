@@ -14,17 +14,20 @@ class stateClass
 {
 public:
     int verbose;
-
+    bool deleteOverflow;
     void out(const string &output, int importance, std::source_location location = std::source_location::current())
-     {
-        if (importance <= verbose) std::cout << location.function_name()<<"->"  <<  output;
-        if(verbose >= 4) 
+    {
+        if (importance <= verbose && verbose >= 3)
+            std::cout << location.function_name() << "->";
+        if (importance <= verbose)
+            std::cout << output;
+        if (verbose >= 4)
         {
-                    auto now = std::chrono::system_clock::now();
-            std::cout<<"@"<<now<<"±10ms";
-           
+            auto now = std::chrono::system_clock::now();
+            std::cout << "@" << now ;
         }
-         if (importance <= verbose) std::cout<<std::endl;
+        if (importance <= verbose)
+            std::cout << std::endl<<std::flush;
     }
 };
 
@@ -49,7 +52,7 @@ private:
 };
 
 /* =========================================================1. BASIC UTILITIES========================================================= */
-void InvalidInputMessage(const string &details= "[No details provided]",std::source_location location = std::source_location::current());
+void InvalidInputMessage(const string &details = "[No details provided]", std::source_location location = std::source_location::current());
 bool createFolder(const string &name);
 bool checkEx(const string &path);
 vector<string> GetFilenamesFromFolder(string path);

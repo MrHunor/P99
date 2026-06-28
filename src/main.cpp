@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
     auto encode = app.add_subcommand("encode", "Encode a File into a image or folder containing images");
     encode->add_option("-i,--into", ifilefoldername, "The file or folder containing images to encode into")->required()->check(CLI::ExistingPath);
     encode->add_option("-f,--from", ffilename, "The file to encode from")->required()->check(CLI::ExistingFile);
+    encode->add_flag("-o,--overflow",state.deleteOverflow,"Delete Overflow Files out of from folder to make decoding easier.");
     encode->callback([&]()
                      {
 
