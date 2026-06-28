@@ -520,7 +520,9 @@ bool EncodeImageFolder(const string &ifoldername, const string &ffilename_, stat
     {
     for(int i = NIL; i< FileList.size(); i++)
     {
-    remove(FileList[i].c_str());
+        state.out("Deleting file:"+FileList[i],1);
+        fullPath = ifoldername + "\\" + FileList[i];
+    if(remove(fullPath.c_str())!=0) InvalidInputMessage("Failed to delete file");
     }
 
     }
