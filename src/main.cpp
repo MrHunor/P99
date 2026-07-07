@@ -82,6 +82,36 @@ DecodeWav(mfilefoldername,ifilefoldername,state);
         }
      } });
 
+     auto check = app.add_subcommand("check","Check capacity of a Media File (currently only supportes images)");
+     check->add_option("-i,--into", ifilefoldername, "The file or folder containing images to encode into")->required()->check(CLI::ExistingPath);
+
+     check->callback([&]()
+     {
+        state.out("Running Check callback",4);
+ if(std::filesystem::is_directory(ifilefoldername)) {
+        if(*audio)
+        {
+            state.out("Audio Files are currently unsuppored",1);
+        }
+        else if (*image)
+        {
+            state.out("Checking image dir",4);
+checkImageFolderCapacityMidEnd(ifilefoldername,state);
+        }
+        
+     } else if (std::filesystem::is_regular_file(ifilefoldername)) {
+        if(*audio)
+        {
+    
+           state.out("Audio Files are currently unsuppored",1);
+        }
+        else if(*image)
+        {
+            state.out("Checking image file",4);
+checkImageFileCapacity(ifilefoldername,state);
+        }
+
+ } });
     app.callback([&]()
                  {
                     

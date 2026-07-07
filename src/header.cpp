@@ -15,7 +15,9 @@
 #include <sndfile.h>
 #include <stacktrace>
 #include <source_location>
+#include <cmath>
 #include <chrono>
+#include <iomanip>
 #include "header.h"
 namespace fs = std::filesystem;
 
@@ -136,6 +138,14 @@ void CheckFilelists(const vector<string> &FileList1, const vector<string> &FileL
         }
     }
     state.out("Finished", 4);
+}
+
+string returnSpaceBitsAsSensefulValue(int value)
+{
+float floatvalue=value;
+if(value>1073741824) return ts(floatvalue/1073741824)+"GB";
+if(value>1048576) return ts(floatvalue/1048576)+"MB";
+if(value>1,024) return ts(floatvalue/1024)+"KB";
 }
 
 /* =========================================================2. BIT / FILE UTILITIES========================================================= */
@@ -259,15 +269,15 @@ bool FileIs(const std::string &filename, const std::string &extension)
 
 /* =========================================================3. LOW-LEVEL IMAGE LOGIC========================================================= */
 
-size_t checkImageSizeBackend(unsigned char *img, size_t imgSize, stateClass &state)
+size_t checkImageCapacityBackend(unsigned char *img, size_t imgSize, stateClass &state)
 {
     state.out("Starting...", 4);
-    size_t counter=0;
+    size_t counter = 0;
     for (size_t i = 0; i < imgSize; i++)
     {
-        if (img[imgSize] > 0 && img[imgSize] < 255)
+        if (img[i] > 0 && img[i] < 255)
         {
-           counter++;
+            counter++;
         }
     }
     state.out("Finished....", 4);
@@ -336,16 +346,48 @@ void ReadDataFromImageC(unsigned char *imgC, unsigned char *imgR, int size, int 
 
 /* =========================================================4. HIGH-LEVEL IMAGE & FOLDER OPERATIONS========================================================= */
 
-void checkImageSize(const string& ifilename, stateClass& state)
+//You might ask yourself why this function is "MidEnd" well thats because it returns a function (which is caracteristic of backend functions of this type) but also prints the size (which is caracteristic of frontend functions), is this stupid? yes. do i have time to change this now? no. Have fun dealing with this, future me
+int checkImageFolderCapacityMidEnd(const string &ifoldername, stateClass &state)
 {
-    state.out("Starting...",4);
-    int w=0;
-    int h=0;
-    int channels= 0;
+
+    vector<string> ifolderList = GetFilenamesFromFolder(ifoldername,state);
+    int w = 0;
+    int h = 0;
+    int channels=0;
+    string fullPath;
+    int imgSize;
+    uint64_t counter=0;
+    int diff;
+    for (size_t i = 0; i < ifolderList.size(); i++)
+    {
+        state.out("Iteration:" + std::to_string(i) + "/" + std::to_string(ifolderList.size() - 1), 4);
+        fullPath = ifoldername + "\\" + ifolderList[i];
+        unsigned char *img = stbi_load(fullPath.c_str(), &w, &h, &channels, 0);
+        imgSize=w*h*channels;
+        diff= counter;
+        counter = counter + checkImageCapacityBackend(img,imgSize,state);
+        diff = counter-diff;
+        state.out("File:"+fullPath+" has a capacity of:"+returnSpaceBitsAsSensefulValue(std::round(diff/8))+", which contributes to the full Capacity of the Folder which is currently measure to be:"+returnSpaceBitsAsSensefulValue(std::round(counter/8))+"",2);
+        state.out("Freeing Memory...", 4);
+        stbi_image_free(img);
+        
+    }
+    state.out("Final Capacity of:"+ifoldername+":"+returnSpaceBitsAsSensefulValue(std::round(counter/8)),1);
+    state.out("Finished",4);
+return counter;
+}
+
+void checkImageFileCapacity(const string &ifilename, stateClass &state)
+{
+    state.out("Starting...", 4);
+    int w = 0;
+    int h = 0;
+    int channels = 0;
+    int bitCounter = 0;
     size_t imgSize;
     unsigned char *img = stbi_load(ifilename.c_str(), &w, &h, &channels, 0);
     imgSize = w * h * channels;
-    state.out("Available size:"+ts(checkImageSizeBackend(img, imgSize,state))+"bits",0);
+    state.out("Available size :" + ts(checkImageCapacityBackend(img, imgSize, state)) + "bits", 0);
 }
 
 string ReadFilenameFromImageC(unsigned char *imgC, unsigned char *imgR, int &bitI, int &stringI, stateClass &state)
@@ -486,7 +528,7 @@ bool DecodeImage(const string &mFilename, const string &ffilename_, stateClass &
 
 bool EncodeImageFolder(const string &ifoldername, const string &ffilename_, stateClass &state)
 {
-    state.out("Init", 1);
+    state.out("Init", 4);
     vector<string> FileList = GetFilenamesFromFolder(ifoldername, state);
     vector<bool> array, aChunk;
     string fullPath{}, mfoldername{};

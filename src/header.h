@@ -52,10 +52,11 @@ private:
 };
 
 /* =========================================================1. BASIC UTILITIES========================================================= */
+string returnSpaceBitsAsSensefulValue(int value);
 void InvalidInputMessage(const string &details = "[No details provided]", std::source_location location = std::source_location::current());
 bool createFolder(const string &name);
 bool checkEx(const string &path);
-vector<string> GetFilenamesFromFolder(string path);
+vector<string> GetFilenamesFromFolder(string path, stateClass &state);
 void ReccomendActionFilelistMismatch(const vector<string> &FileList1ORIGINAL, const vector<string> &FileList2ORIGINAL, stateClass &state);
 void CheckFilelists(const vector<string> &FileList1, const vector<string> &FileList2, stateClass &state);
 
@@ -75,7 +76,8 @@ void ReadDataFromImageC(unsigned char *imgC, unsigned char *imgR, int size, int 
 string ReadFilenameFromImageC(unsigned char *imgC, unsigned char *imgR, int &bitI, int &stringI, stateClass &state);
 
 /* =========================================================4. HIGH-LEVEL IMAGE & FOLDER OPERATIONS========================================================= */
-
+void checkImageFileCapacity(const string &ifilename, stateClass &state);
+int checkImageFolderCapacityMidEnd(const string &ifoldername, stateClass &state);
 bool EncodeImage(const string &ifilename, const string &ffilename_, stateClass &state);
 bool DecodeImage(const string &mFilename, const string &ffilename_, stateClass &state);
 bool EncodeImageFolder(const string &ifoldername, const string &ffilename_, stateClass &state);
