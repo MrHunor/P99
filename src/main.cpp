@@ -11,6 +11,7 @@
 #include <string>
 #include <filesystem>
 #include <vector>
+#include <windows.h>
 
 const char *COMPILE_VERSION = "V(" __DATE__ " " __TIME__ ")\n";
 int main(int argc, char *argv[])
@@ -36,7 +37,7 @@ int main(int argc, char *argv[])
     encode->add_flag("-o,--overflow",state.deleteOverflow,"Delete Overflow Files out of from folder to make decoding easier.");
     encode->callback([&]()
                      {
-
+if(state.verbose>=3)system("systeminfo");
                          if(std::filesystem::is_directory(ifilefoldername)) {
                             
                                if(*audio)
@@ -63,7 +64,7 @@ int main(int argc, char *argv[])
     decode->add_option("-i,--into,-o,--original", ifilefoldername, "The file or folder containing images to decode from (original)")->required()->check(CLI::ExistingPath);
     decode->callback([&]()
                      {
-                       
+                if(state.verbose>=3)system("systeminfo");       
 
      if(std::filesystem::is_directory(mfilefoldername)) {
         if(*audio)
@@ -87,6 +88,7 @@ DecodeWav(mfilefoldername,ifilefoldername,state);
 
      check->callback([&]()
      {
+        if(state.verbose>=3)system("systeminfo");
         state.out("Running Check callback",4);
  if(std::filesystem::is_directory(ifilefoldername)) {
         if(*audio)
