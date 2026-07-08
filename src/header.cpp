@@ -483,8 +483,7 @@ bool EncodeImage(const string &ifilename, const string &ffilename_, stateClass &
 
     state.out("Writing to Image (Disk)...", 1);
     mfilename =  mfilename.insert(mfilename.length() - 4, 1, 'M');
-    stbi_write_png(mfilename.c_str(), w, h, 3, img, 3 * w);
-
+    stbi_write_png(mfilename.c_str(), w, h, channels, img, w*channels);
     state.out("Freeing Memory...", 4);
     stbi_image_free(img);
 
@@ -515,7 +514,7 @@ bool DecodeImage(const string &mFilename, const string &ffilename_, stateClass &
         InvalidInputMessage("Target missing.");
 
     state.out("Load Orig Img", 1);
-    unsigned char *imgC = stbi_load(ffilename.c_str(), &w, &h, &channels, 3);
+    unsigned char *imgC = stbi_load(ffilename.c_str(), &w, &h, &channels, 0); 
     if (!imgC)
         return 1;
 
