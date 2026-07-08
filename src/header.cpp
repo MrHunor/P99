@@ -143,10 +143,13 @@ void CheckFilelists(const vector<string> &FileList1, const vector<string> &FileL
 
 string returnSpaceBitsAsSensefulValue(int value)
 {
-float floatvalue=value;
-if(value>1073741824) return ts(floatvalue/1073741824)+"GB";
-if(value>1048576) return ts(floatvalue/1048576)+"MB";
-if(value>1,024) return ts(floatvalue/1024)+"KB";
+    float floatvalue = value;
+    if (value > 1073741824)
+        return ts(floatvalue / 1073741824) + "GB";
+    if (value > 1048576)
+        return ts(floatvalue / 1048576) + "MB";
+    if (value > 1, 024)
+        return ts(floatvalue / 1024) + "KB";
 }
 
 /* =========================================================2. BIT / FILE UTILITIES========================================================= */
@@ -274,31 +277,36 @@ size_t checkImageCapacityBackend(unsigned char *img, size_t imgSize, stateClass 
 {
     state.out("Starting...", 4);
     size_t counter = 0;
+    int channelCounter=1;//carful this is 1 initialised not 0
     for (size_t i = 0; i < imgSize; i++)
     {
-        if (img[i] > 0 && img[i] < 255)
+        if (img[i] > 0 && img[i] < 255&&channelCounter != 4)
         {
             counter++;
         }
+        if(channelCounter == 4) channelCounter = 0;
+        channelCounter++;
+        
     }
     state.out("Finished....", 4);
     return counter;
 }
 
-bool WriteToImage(unsigned char *img, size_t imgSize, const vector<bool> &s, stateClass &state, int &bitI, int &stringI)
+bool WriteToImage(unsigned char *img, size_t capacity, const vector<bool> &s, stateClass &state, int &bitI, int &stringI)
 {
     state.out("Starting...", 4);
     auto sLength = s.size();
     state.out("Starting loop...", 4);
+    int channelCounter=1;//carful this is 1 initialised not 0
     while (stringI < sLength)
     {
         // state.out("\nimgSize:"+ts(imgSize)+"\nbitI:"+ts(bitI)+"\nstringI"+ts(stringI)+"\n",4);
-        if (bitI >= imgSize)
+        if (bitI >= capacity)
         {
-            state.out("Image Capacity overflow\nimgSize:" + ts(imgSize) + "\nBitI:" + ts(bitI) + "\nstringI:" + ts(stringI) + "\nMeaning that there were only " + ts(stringI) + "/" + ts(bitI) + " bits of the image written too", 4);
+            state.out("Image Capacity overflow\ncapacity:" + ts(capacity) + "\nBitI:" + ts(bitI) + "\nstringI:" + ts(stringI), 4);
             return 0;
         }
-        if (img[bitI] > 0 && img[bitI] < 255)
+        if (img[bitI] > 0 && img[bitI] < 255 &&channelCounter != 4)
         {
             if (s[stringI] == 0)
             {
@@ -311,7 +319,9 @@ bool WriteToImage(unsigned char *img, size_t imgSize, const vector<bool> &s, sta
                 stringI++;
             }
         }
+        if(channelCounter == 4) channelCounter = 0;
         bitI++;
+        channelCounter++;
     }
     state.out("Finished", 4);
     return 0;
@@ -347,35 +357,34 @@ void ReadDataFromImageC(unsigned char *imgC, unsigned char *imgR, int size, int 
 
 /* =========================================================4. HIGH-LEVEL IMAGE & FOLDER OPERATIONS========================================================= */
 
-//You might ask yourself why this function is "MidEnd" well thats because it returns a function (which is caracteristic of backend functions of this type) but also prints the size (which is caracteristic of frontend functions), is this stupid? yes. do i have time to change this now? no. Have fun dealing with this, future me
+// You might ask yourself why this function is "MidEnd" well thats because it returns a function (which is caracteristic of backend functions of this type) but also prints the size (which is caracteristic of frontend functions), is this stupid? yes. do i have time to change this now? no. Have fun dealing with this, future me
 int checkImageFolderCapacityMidEnd(const string &ifoldername, stateClass &state)
 {
 
-    vector<string> ifolderList = GetFilenamesFromFolder(ifoldername,state);
+    vector<string> ifolderList = GetFilenamesFromFolder(ifoldername, state);
     int w = 0;
     int h = 0;
-    int channels=0;
+    int channels = 0;
     string fullPath;
     int imgSize;
-    uint64_t counter=0;
+    uint64_t counter = 0;
     int diff;
     for (size_t i = 0; i < ifolderList.size(); i++)
     {
         state.out("Iteration:" + std::to_string(i) + "/" + std::to_string(ifolderList.size() - 1), 4);
         fullPath = ifoldername + "\\" + ifolderList[i];
         unsigned char *img = stbi_load(fullPath.c_str(), &w, &h, &channels, 0);
-        imgSize=w*h*channels;
-        diff= counter;
-        counter = counter + checkImageCapacityBackend(img,imgSize,state);
-        diff = counter-diff;
-        state.out("File:"+fullPath+" has a capacity of:"+returnSpaceBitsAsSensefulValue(std::round(diff/8))+", which contributes to the full Capacity of the Folder which is currently measure to be:"+returnSpaceBitsAsSensefulValue(std::round(counter/8))+"",2);
+        imgSize = w * h * channels;
+        diff = counter;
+        counter = counter + checkImageCapacityBackend(img, imgSize, state);
+        diff = counter - diff;
+        state.out("File:" + fullPath + " has a capacity of:" + returnSpaceBitsAsSensefulValue(std::round(diff / 8)) + ", which contributes to the full Capacity of the Folder which is currently measure to be:" + returnSpaceBitsAsSensefulValue(std::round(counter / 8)) + "", 2);
         state.out("Freeing Memory...", 4);
         stbi_image_free(img);
-        
     }
-    state.out("Final Capacity of:"+ifoldername+":"+returnSpaceBitsAsSensefulValue(std::round(counter/8)),1);
-    state.out("Finished",4);
-return counter;
+    state.out("Final Capacity of:" + ifoldername + ":" + returnSpaceBitsAsSensefulValue(std::round(counter / 8)), 1);
+    state.out("Finished", 4);
+    return counter;
 }
 
 void checkImageFileCapacity(const string &ifilename, stateClass &state)
@@ -442,11 +451,11 @@ bool EncodeImage(const string &ifilename, const string &ffilename_, stateClass &
     string ffilename = ffilename_;
     int w{}, h{}, channels{}, imgSize{}, bitI{}, stringI{};
     vector<bool> array;
-
+    string mfilename=ifilename;
     state.out("Loading image '" + ifilename + "...", 1);
     unsigned char *img = stbi_load(ifilename.c_str(), &w, &h, &channels, 0);
     imgSize = w * h * channels;
-
+    int capacity=0;
     if (!img)
         InvalidInputMessage("Failed to load image context.");
 
@@ -460,7 +469,8 @@ bool EncodeImage(const string &ifilename, const string &ffilename_, stateClass &
     ReadFileToArray(ffilename, array, state);
 
     state.out("Checking capacity", 4);
-    if (array.size() > imgSize)
+    capacity= checkImageCapacityBackend(img, imgSize, state);
+    if (array.size() > capacity)
     {
         InvalidInputMessage("Given File is too big to encode. Encoding File size=" + std::to_string(array.size()) + "; imageSize" + std::to_string(imgSize));
         stbi_image_free(img);
@@ -469,10 +479,11 @@ bool EncodeImage(const string &ifilename, const string &ffilename_, stateClass &
 
     state.out("Writing to Image (Memory)...", 1);
     state.out("ARRAY Size:" + ts(array.size()) + "bit/" + ts(array.size() / 8) + "Bytes", 4);
-    WriteToImage(img, imgSize, array, state, bitI, stringI);
+    WriteToImage(img, capacity, array, state, bitI, stringI);
 
     state.out("Writing to Image (Disk)...", 1);
-    stbi_write_png("output.png", w, h, 3, img, 3 * w);
+    mfilename =  mfilename.insert(mfilename.length() - 4, 1, 'M');
+    stbi_write_png(mfilename.c_str(), w, h, 3, img, 3 * w);
 
     state.out("Freeing Memory...", 4);
     stbi_image_free(img);
@@ -535,7 +546,9 @@ bool EncodeImageFolder(const string &ifoldername, const string &ffilename_, stat
     string fullPath{}, mfoldername{};
     string ffilename = ffilename_;
     int w{}, inputSize{}, h{}, channels{}, bitcounter{}, NIL{}, bitI{}, stringI{}, offset{};
-
+    int chunkSize = 0;
+    int capacity = 0;
+    unsigned char *img = nullptr;
     mfoldername = ifoldername + "M";
     state.out("Create M-Dir", 1);
     createFolder(mfoldername, state);
@@ -556,13 +569,14 @@ bool EncodeImageFolder(const string &ifoldername, const string &ffilename_, stat
     state.out("Calculating NIL...", 1);
     for (int i = 0; bitcounter < inputSize; i++)
     {
+
         if (i >= FileList.size())
             InvalidInputMessage("Not enough images to store data.\n Bitcounter:" + std::to_string(bitcounter) + ".\ninputSize:" + std::to_string(inputSize));
 
         fullPath = ifoldername + "\\" + FileList[i];
-        stbi_info(fullPath.c_str(), &w, &h, &channels);
-
-        bitcounter += (w * h * channels);
+        img = stbi_load(fullPath.c_str(), &w, &h, &channels, 0);
+        
+        bitcounter += checkImageCapacityBackend(img, w*h*channels,state);
         NIL = i + 1;
     }
     state.out("Expected NIL" + std::to_string(NIL) + "/" + std::to_string(FileList.size()), 4);
@@ -572,18 +586,19 @@ bool EncodeImageFolder(const string &ifoldername, const string &ffilename_, stat
     {
         state.out("Iteration:" + std::to_string(i) + "/" + std::to_string(NIL), 4);
         fullPath = ifoldername + "\\" + FileList[i];
-        unsigned char *img = stbi_load(fullPath.c_str(), &w, &h, &channels, 0);
+        img = stbi_load(fullPath.c_str(), &w, &h, &channels, 0);
 
-        state.out("Assigning Chunk of Size:" + std::to_string(w * h * channels), 4);
-        int capacity = w * h * channels;
-        int chunkSize = std::min((int)array.size() - offset, capacity);
+        capacity=checkImageCapacityBackend(img,w*h*channels,state);
+        state.out("Assigning Chunk of Size:" + capacity, 4);
+        
+        chunkSize = std::min((int)array.size() - offset, capacity);
         aChunk.assign(array.begin() + offset, array.begin() + chunkSize + offset);
 
         bitI = 0;
         stringI = 0;
         state.out("Writing to Image (Memory)...", 1);
-        WriteToImage(img, (w * h * channels), aChunk, state, bitI, stringI);
-        state.out("Actual Chunk Size:" + std::to_string(stringI), 4);
+        WriteToImage(img, capacity, aChunk, state, bitI, stringI);
+        state.out("Actual Chunk Size:" + std::to_string(stringI)+"(If this varies from the previous message, something is seriously wrong)", 4);
         offset = offset + stringI;
 
         fullPath = mfoldername + "\\" + FileList[i].insert(FileList[i].length() - 4, 1, 'M');
