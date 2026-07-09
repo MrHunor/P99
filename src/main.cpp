@@ -1,12 +1,11 @@
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <stb_image_write.h>
+
 #pragma warning(disable : 4996)
 #define ts(x) std::to_string(x)
-#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "CLI11.hpp"
-#include "header.h"
+#include "img/imageHLL.h"
+#include "wav/wavHLL.h"
+#include "core/utils.h"
+#include "core/defs.h"
 #include <iostream>
 #include <string>
 #include <filesystem>
@@ -19,7 +18,6 @@ int main(int argc, char *argv[])
     stateClass state;
     state.verbose=1;
     std::cout << "Build Version:" << COMPILE_VERSION;
-    NullStream nullout;
     char mediatype;
     std::string ifilefoldername;
     std::string ffilename;
