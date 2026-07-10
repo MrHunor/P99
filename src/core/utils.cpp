@@ -18,6 +18,7 @@
 #include "defs.h"
 #include "utils.h"
 
+//LINK ../../docs/core.md:13
 void InvalidInputMessage(const std::string &details, std::source_location location)
 {
     std::cout << std::stacktrace::current() << std::endl;

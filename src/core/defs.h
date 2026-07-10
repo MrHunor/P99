@@ -10,6 +10,7 @@ class stateClass
 public:
     int verbose;
     bool deleteOverflow;
+    //LINK ../../docs/core.md:6
     void out(const std::string &output, int importance, std::source_location location = std::source_location::current())
     {
         if (importance <= verbose && verbose >= 4)
