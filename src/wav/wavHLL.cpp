@@ -15,9 +15,9 @@
 #include <cmath>
 #include <chrono>
 #include <iomanip>
-#include "src/core/defs.h"
-#include "src/core/utils.h"
-#include "src/wav/wavLLL.h"
+#include "../core/defs.h"
+#include "../core/utils.h"
+#include "../wav/wavLLL.h"
 bool EncodeWav(const std::string &ifilename, const std::string &ffilename, stateClass &state)
 {
     state.out("Init", 1);

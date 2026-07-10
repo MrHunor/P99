@@ -1,7 +1,7 @@
 
 #pragma warning(disable : 4996)
 #define ts(x) std::to_string(x)
-#include "CLI11.hpp"
+#include "../include/CLI11/CLI11.hpp"
 #include "img/imageHLL.h"
 #include "wav/wavHLL.h"
 #include "core/utils.h"

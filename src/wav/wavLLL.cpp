@@ -15,8 +15,8 @@
 #include <cmath>
 #include <chrono>
 #include <iomanip>
-#include "src/core/defs.h"
-#include "src/core/utils.h"
+#include "../core/defs.h"
+#include "../core/utils.h"
 void ReadDataFromWavC(float *mSampleData, float *iSampleData, int &bitI, int stringI, std::vector<bool> &decoded, stateClass &state)
 {
     state.out("Read F32", 1);

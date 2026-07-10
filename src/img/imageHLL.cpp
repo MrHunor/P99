@@ -15,9 +15,9 @@
 #include <cmath>
 #include <chrono>
 #include <iomanip>
-#include "src/core/defs.h"
-#include "src/core/utils.h"
-#include "src/img/imageLLL.h"
+#include "../core/defs.h"
+#include "../core/utils.h"
+#include "../img/imageLLL.h"
 #include "imageHLL.h"
 // You might ask yourself why this function is "MidEnd" well thats because it returns a function (which is caracteristic of backend functions of this type) but also prints the size (which is caracteristic of frontend functions), is this stupid? yes. do i have time to change this now? no. Have fun dealing with this, future me
 int checkImageFolderCapacityMidEnd(const std::string &ifoldername, stateClass &state)

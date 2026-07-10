@@ -1,6 +1,4 @@
-#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
 #include <iostream>
 #include <string>
@@ -18,7 +16,7 @@
 #include <cmath>
 #include <chrono>
 #include <iomanip>
-#include "src/core/defs.h"
+#include "../core/defs.h"
 #include "imageLLL.h"
 size_t checkImageCapacityBackend(unsigned char *img, size_t imgSize, stateClass &state)
 {
