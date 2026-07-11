@@ -17,31 +17,16 @@
 #include <iomanip>
 #include "../core/defs.h"
 #include "../core/utils.h"
-void ReadDataFromWavC(float *mSampleData, float *iSampleData, int &bitI, int stringI, std::vector<bool> &decoded, stateClass &state)
+
+int CheckWavFileCapacityBackend( std::vector<short> buffer, stateClass& state)
 {
-    state.out("Read F32", 1);
-    bool end = false;
-    while (!end)
-    {
-        if (std::abs(iSampleData[bitI]) <= 0.9998f && iSampleData[bitI] != 0)
-        {
-            if (mSampleData[bitI] == iSampleData[bitI] - 0.0001f)
-            {
-                decoded.push_back(false);
-                stringI++;
-            }
-            else if (mSampleData[bitI] == iSampleData[bitI] + 0.0001f)
-            {
-                decoded.push_back(true);
-                stringI++;
-            }
-            else
-            {
-                end = true;
-            }
-        }
-    }
-    state.out("F32 Done", 4);
+int counter=0;
+int bufferSize=buffer.size();
+for(int bitI = 0; bitI<=buffer.size();bitI++)
+{
+  if (std::abs(buffer[bitI]) < 32767 && buffer[bitI] != 0)counter++;
+}
+return counter;
 }
 
 std::string ReadFilenameFromWavC(std::vector<short> &mbuffer, std::vector<short> &ibuffer, int &bitI, int &stringI, stateClass &state)

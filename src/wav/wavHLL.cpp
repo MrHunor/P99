@@ -157,3 +157,109 @@ bool DecodeWav(const std::string &mFilename, const std::string &iFilename, state
     state.out("Complete", 1);
     return 0;
 }
+
+bool EncodeWavFolder(const std::string &ifoldername, const std::string &ffilename, stateClass &state)
+{
+    state.out("Starting...", 4);
+    std::string absolutePath;
+    std::string mfoldername = ifoldername + "M";
+    std::vector<std::string> FileList = GetFilenamesFromFolder(ifoldername, state);
+    std::vector<bool> farray;
+    std::vector<bool> aChunk;
+    std::vector<short> buffer;
+    int NIL;
+    int bitcounter = 0;
+    int stringI=0;
+    int bitI;
+    sf_count_t originalFrames;
+    sf_count_t totalSamples;
+    sf_count_t framesRead;
+    sf_count_t framesWritten;
+    ReadFileToArray(ffilename, farray, state);
+    SF_INFO sfinfo;
+    sfinfo.format = 0;
+    SNDFILE *infline = nullptr;
+    state.out("Calculating NIL...", 4);
+    for (NIL = 0; bitcounter < farray.size(); NIL++)
+    {
+        state.out("Iteration:" + ts(NIL) + "/" + ts(farray.size()) + "(MAX)", 4);
+        state.out("Bitcounter:" + ts(bitcounter), 4);
+
+        state.out("Opening file:" + FileList[NIL], 1);
+        infline = sf_open(FileList[NIL].c_str(), SFM_READ, &sfinfo);
+        originalFrames = sfinfo.frames;
+        if (!infline)
+            InvalidInputMessage("Could not open input file");
+
+        state.out("Details:", 4);
+        state.out("Sample Rate:" + std::to_string(sfinfo.samplerate) + "Hz", 4);
+        state.out("Channels   :" + std::to_string(sfinfo.channels), 4);
+        state.out("Frames     :" + std::to_string(sfinfo.frames), 4);
+
+        totalSamples = sfinfo.frames * sfinfo.channels;
+        state.out("Resizing buffer...", 4);
+        buffer.resize(totalSamples);
+
+        state.out("Read SF", 1);
+        framesRead = sf_readf_short(infline, buffer.data(), sfinfo.frames);
+        if (framesRead != sfinfo.frames)
+            InvalidInputMessage("Read Frame Count does not match expected Frame Count\nRead Frame Count" + ts(framesRead) + "\nExpected:" + ts(sfinfo.frames));
+        sf_close(infline);
+        bitcounter = bitcounter + CheckWavFileCapacityBackend(buffer, state);
+    }
+
+    for (int i = 0; i <= NIL; i++)
+    {
+        state.out("Iteration:" + ts(i) + "/" + ts(NIL), 4);
+        state.out("StringI:"+ts(stringI),4);
+        state.out("Opening file:" + FileList[i], 1);
+        infline = sf_open(FileList[i].c_str(), SFM_READ, &sfinfo);
+        originalFrames = sfinfo.frames;
+        if (!infline)
+            InvalidInputMessage("Could not open input file");
+
+        state.out("Details:", 4);
+        state.out("Sample Rate:" + std::to_string(sfinfo.samplerate) + "Hz", 4);
+        state.out("Channels   :" + std::to_string(sfinfo.channels), 4);
+        state.out("Frames     :" + std::to_string(sfinfo.frames), 4);
+
+        totalSamples = sfinfo.frames * sfinfo.channels;
+        state.out("Resizing buffer...", 4);
+        buffer.resize(totalSamples);
+
+        state.out("Read SF", 1);
+        framesRead = sf_readf_short(infline, buffer.data(), sfinfo.frames);
+        if (framesRead != sfinfo.frames)
+            InvalidInputMessage("Read Frame Count does not match expected Frame Count\nRead Frame Count" + ts(framesRead) + "\nExpected:" + ts(sfinfo.frames));
+        sf_close(infline);
+        state.out("Writing to file (memory)...",4);
+        for (bitI = 0; bitI <= farray.size(); bitI++)
+        {
+            if (std::abs(buffer[bitI]) < 32767 && buffer[bitI] != 0)
+            {
+                if (farray[stringI] == false)
+                {
+                    buffer[bitI] = buffer[bitI] - 1;
+                }
+                else
+                {
+                    buffer[bitI] = buffer[bitI] + 1;
+                }
+                stringI++;
+            }
+        }
+        absolutePath= mfoldername+"\\"+FileList[i].insert(FileList[i].length() - 4, 1, 'M');
+         state.out("Opening file:"+absolutePath,4);
+         SNDFILE *outfile = sf_open(absolutePath.c_str(), SFM_WRITE, &sfinfo);
+        if (!outfile)
+        InvalidInputMessage("Could not open output File");
+
+    state.out("Writing ... (disk)", 1);
+    framesWritten = sf_writef_short(outfile, buffer.data(), originalFrames);
+    if (framesWritten != originalFrames)
+        InvalidInputMessage("Written Frame Count does not match expected Frame Count");
+    sf_close(outfile);
+
+    }
+    return 0;
+}

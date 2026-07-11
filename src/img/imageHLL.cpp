@@ -49,6 +49,7 @@ int checkImageFolderCapacityMidEnd(const std::string &ifoldername, stateClass &s
     return counter;
 }
 
+
 void checkImageFileCapacity(const std::string &ifilename, stateClass &state)
 {
     state.out("Starting...", 4);

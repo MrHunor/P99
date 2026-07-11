@@ -17,6 +17,7 @@
 #include <iomanip>
 #include "../core/defs.h"
 #include "../core/utils.h"
+int CheckWavFileCapacityBackend( std::vector<short> buffer, stateClass& state);
 void ReadDataFromWavC(float *mSampleData, float *iSampleData, int &bitI, int stringI, std::vector<bool> &decoded, stateClass &state);
 std::string ReadFilenameFromWavC(std::vector<short> &mbuffer, std::vector<short> &ibuffer, int &bitI, int &stringI, stateClass &state);
 void ReadDataFromWavC(std::vector<short> &mbuffer, std::vector<short> &ibuffer, int &bitI, int &stringI, std::vector<bool> &decoded, stateClass &state);

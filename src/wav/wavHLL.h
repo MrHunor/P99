@@ -20,3 +20,4 @@
 #include "../wav/wavLLL.h"
 bool EncodeWav(const std::string &ifilename, const std::string &ffilename, stateClass &state);
 bool DecodeWav(const std::string &mFilename, const std::string &iFilename, stateClass &state);
+bool EncodeWavFolder(const std::string &ifoldername, const std::string &ffilename, stateClass &state);
