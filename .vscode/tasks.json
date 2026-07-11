@@ -1,26 +1,31 @@
 {
     "version": "2.0.0",
-    "tasks": [
+    "tasks": [//array of tasks to be executed
         {
-            "type": "cppbuild",
+            "type": "cppbuild", //specifier for VS Code
             "label": "C/C++: g++.exe build active file",
-            "command": "C:/msys64/ucrt64/bin/g++.exe",
+            "command": "C:/msys64/ucrt64/bin/g++.exe", //compiler path
             "args": [
-                "-fdiagnostics-color=always",
-                "-g",
+               "-fdiagnostics-color=always",
+                "-g",//generate debug information in the exe
                 "${workspaceFolder}/src/*.cpp",
+                "${workspaceFolder}/src/core/*.cpp",
+                "${workspaceFolder}/src/img/*.cpp",
+                "${workspaceFolder}/src/wav/*.cpp",
                 "-I${workspaceFolder}/include/stb",
-                "-I${workspaceFolder}/include/CLI11",
+                "-I${workspaceFolder}/include/include/CLI11",
                 "-I${workspaceFolder}/include/libsndfile/include",
                 "${workspaceFolder}/sndfile.dll",
                 "-static",
-                "-o",
-                "${workspaceFolder}/main.exe"
+                "-o",//following argument is the name of the execuable
+                "${workspaceFolder}/main.exe",
+                "-std=c++23",
+                "-lstdc++exp"//links experiments cpp libarys which is requeired for new c++ version
             ],
-            "options": {
-                "cwd": "${workspaceFolder}",
+            "options": {//for the termianl
+                "cwd": "${workspaceFolder}",//current working directory
                 "env": {
-                    "PATH": "C:\\msys64\\ucrt64\\bin;${env:PATH}"
+                    "PATH": "C:\\msys64\\ucrt64\\bin;${env:PATH}"//pretends to be in PATH
                 }
             },
             "problemMatcher": [
@@ -30,7 +35,7 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "detail": "Compiler: C:/msys64/ucrt64/bin/g++.exe"
+            "detail": "Compiler: C:/msys64/ucrt64/bin/g++.exe"//cosmetic label
         }
     ]
 }

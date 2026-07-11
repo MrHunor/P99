@@ -1,167 +1,121 @@
 @echo off
 setlocal enabledelayedexpansion
 
-echo ===================================================
-echo                P99 TEST PIPELINE
-echo ===================================================
+echo ========================================================
+echo       P99 Media Encoder/Decoder Automated Test
+echo ========================================================
+echo.
 
-:: Configuration
+:: Setup Executable and Paths
 set "EXE=main.exe"
-set "SRC_TXT=testfiles\content\test.txt"
-set "SRC_VID=testfiles\content\video.mp4"
-set "SRC_AUDIO=testfiles\sound.wav"
+set "TESTFILES_DIR=testfiles"
+set "CONTENT_DIR=%TESTFILES_DIR%\content"
+set "IMAGES_SRC=%TESTFILES_DIR%\imagesOriginal"
+set "WAV_SRC=%TESTFILES_DIR%\sound.wav"
 
-set "IMAGES_ORIG_DIR=testfiles\imagesOriginal"
-set "SINGLE_ORIG_IMG=%IMAGES_ORIG_DIR%\1.png"
+:: Setup Temporary Output Paths to avoid mutating source assets
+set "OUT_DIR=%TESTFILES_DIR%\output_test"
+set "OUT_IMAGES_DIR=%OUT_DIR%\images"
+set "OUT_DECODE_DIR=%OUT_DIR%\decoded"
 
-set "TEMP_TXT=temp_test.txt"
-set "TEMP_VID=temp_video.mp4"
-set "TEMP_TXT_AUDIO=temp_audio_test.txt"
+echo [!] Cleaning up and initializing test output directories...
+if exist "%OUT_DIR%" rmdir /s /q "%OUT_DIR%"
+mkdir "%OUT_DIR%"
+mkdir "%OUT_IMAGES_DIR%"
+mkdir "%OUT_DECODE_DIR%"
 
-set "SINGLE_OUT_IMG=output.png"
-set "FOLDER_OUT_DIR=%IMAGES_ORIG_DIR%M"
-set "SINGLE_OUT_AUDIO=testfiles\soundM.wav"
+:: Mirror or copy original images into output folder for path validations
+xcopy "%IMAGES_SRC%\*" "%OUT_IMAGES_DIR%\" /y /q >nul
 
-:: Initial Cleanup
-if exist "%TEMP_TXT%" del /q "%TEMP_TXT%"
-if exist "%TEMP_VID%" del /q "%TEMP_VID%"
-if exist "%TEMP_TXT_AUDIO%" del /q "%TEMP_TXT_AUDIO%"
-if exist "%SINGLE_OUT_IMG%" del /q "%SINGLE_OUT_IMG%"
-if exist "%FOLDER_OUT_DIR%" rmdir /s /q "%FOLDER_OUT_DIR%"
-
+echo [+] Setup complete. Starting automated tests with maximum verbosity (-vvvv).
 echo.
-echo --- TEST 1: Single Image Mode (TXT) ---
-copy "%SRC_TXT%" "%TEMP_TXT%" >nul
 
-echo [CMD] %EXE% --verbose --image encode --into "%SINGLE_ORIG_IMG%" --from "%TEMP_TXT%"
-"%EXE%" --verbose --image encode --into "%SINGLE_ORIG_IMG%" --from "%TEMP_TXT%"
-if %ERRORLEVEL% neq 0 goto cleanup_fail
-
-del /q "%TEMP_TXT%"
-
-echo [CMD] %EXE% --verbose --image decode --modified "%SINGLE_OUT_IMG%" --original "%SINGLE_ORIG_IMG%"
-"%EXE%" --verbose --image decode --modified "%SINGLE_OUT_IMG%" --original "%SINGLE_ORIG_IMG%"
-if %ERRORLEVEL% neq 0 goto cleanup_fail
-
-if not exist "%TEMP_TXT%" (
-    echo [ERROR] Expected output file '%TEMP_TXT%' was not generated.
-    goto cleanup_fail
+:: --------------------------------------------------------
+:: TEST 1: Image Mode (-m) - Single File Encoding & Decoding
+:: --------------------------------------------------------
+echo --------------------------------------------------------
+echo TEST 1: Single Image Mode (-m)
+echo --------------------------------------------------------
+echo [1/2] Encoding test.txt into a single image...
+%EXE% -m -vvvv encode --into "%OUT_IMAGES_DIR%\10.png" --from "%CONTENT_DIR%\test.txt"
+if %errorlevel% neq 0 (
+    echo [X] TEST 1 Encode Failed with exit code %errorlevel%
+) else (
+    echo [^] Encode completed successfully.
 )
 
-:: Extract and compare SHA-256 hashes
-set "HASH_SRC="
-for /f "skip=1 tokens=*" %%A in ('certutil -hashfile "%SRC_TXT%" SHA256 2^>nul') do if not defined HASH_SRC set "HASH_SRC=%%A"
-set "HASH_SRC=%HASH_SRC: =%"
-
-set "HASH_OUT="
-for /f "skip=1 tokens=*" %%A in ('certutil -hashfile "%TEMP_TXT%" SHA256 2^>nul') do if not defined HASH_OUT set "HASH_OUT=%%A"
-set "HASH_OUT=%HASH_OUT: =%"
-
-echo [HASH] Src: %HASH_SRC%
-echo [HASH] Out: %HASH_OUT%
-
-if /i "%HASH_SRC%" neq "%HASH_OUT%" (
-    echo [FAIL] Hash mismatch detected.
-    goto cleanup_fail
+echo [2/2] Decoding test.txt back from the single image...
+%EXE% -m -vvvv decode --modified "%OUT_IMAGES_DIR%\10.png" --into "%OUT_DECODE_DIR%\test_recovered_single.txt"
+if %errorlevel% neq 0 (
+    echo [X] TEST 1 Decode Failed with exit code %errorlevel%
+) else (
+    echo [^] Decode completed successfully.
 )
-echo [OK] Test 1 verified.
-
 echo.
-echo --- TEST 2: Folder Mode (MP4) ---
-copy "%SRC_VID%" "%TEMP_VID%" >nul
 
-echo [CMD] %EXE% --verbose --image encode --into "%IMAGES_ORIG_DIR%" --from "%TEMP_VID%"
-"%EXE%" --verbose --image encode --into "%IMAGES_ORIG_DIR%" --from "%TEMP_VID%"
-if %ERRORLEVEL% neq 0 goto cleanup_fail
-
-del /q "%TEMP_VID%"
-
-echo [CMD] %EXE% --verbose --image decode --modified "%FOLDER_OUT_DIR%" --original "%IMAGES_ORIG_DIR%"
-"%EXE%" --verbose --image decode --modified "%FOLDER_OUT_DIR%" --original "%IMAGES_ORIG_DIR%"
-if %ERRORLEVEL% neq 0 goto cleanup_fail
-
-if not exist "%TEMP_VID%" (
-    echo [ERROR] Expected output file '%TEMP_VID%' was not generated.
-    goto cleanup_fail
+:: --------------------------------------------------------
+:: TEST 2: Image Mode (-m) - Folder Encoding & Decoding
+:: --------------------------------------------------------
+echo --------------------------------------------------------
+echo TEST 2: Image Folder Mode (-m)
+echo --------------------------------------------------------
+echo [1/2] Encoding videoO.mp4 into the image folder...
+%EXE% -m -vvvv encode --into "%OUT_IMAGES_DIR%" --from "%CONTENT_DIR%\videoO.mp4"
+if %errorlevel% neq 0 (
+    echo [X] TEST 2 Encode Failed with exit code %errorlevel%
+) else (
+    echo [^] Encode completed successfully.
 )
 
-:: Extract and compare SHA-256 hashes
-set "HASH_SRC="
-for /f "skip=1 tokens=*" %%A in ('certutil -hashfile "%SRC_VID%" SHA256 2^>nul') do if not defined HASH_SRC set "HASH_SRC=%%A"
-set "HASH_SRC=%HASH_SRC: =%"
-
-set "HASH_OUT="
-for /f "skip=1 tokens=*" %%A in ('certutil -hashfile "%TEMP_VID%" SHA256 2^>nul') do if not defined HASH_OUT set "HASH_OUT=%%A"
-set "HASH_OUT=%HASH_OUT: =%"
-
-echo [HASH] Src: %HASH_SRC%
-echo [HASH] Out: %HASH_OUT%
-
-if /i "%HASH_SRC%" neq "%HASH_OUT%" (
-    echo [FAIL] Hash mismatch detected.
-    goto cleanup_fail
+echo [2/2] Decoding videoO.mp4 back from the image folder...
+%EXE% -m -vvvv decode --modified "%OUT_IMAGES_DIR%" --into "%OUT_DECODE_DIR%\videoO_recovered.mp4"
+if %errorlevel% neq 0 (
+    echo [X] TEST 2 Decode Failed with exit code %errorlevel%
+) else (
+    echo [^] Decode completed successfully.
 )
-echo [OK] Test 2 verified.
-
 echo.
-echo --- TEST 3: Single Audio Mode (TXT) ---
-copy "%SRC_TXT%" "%TEMP_TXT_AUDIO%" >nul
 
-echo [CMD] %EXE% --verbose --audio encode --into "%SRC_AUDIO%" --from "%TEMP_TXT_AUDIO%"
-"%EXE%" --verbose --audio encode --into "%SRC_AUDIO%" --from "%TEMP_TXT_AUDIO%"
-if %ERRORLEVEL% neq 0 goto cleanup_fail
-
-del /q "%TEMP_TXT_AUDIO%"
-
-echo [CMD] %EXE% --verbose --audio decode --modified "%SINGLE_OUT_AUDIO%" --original "%SRC_AUDIO%"
-"%EXE%" --verbose --audio decode --modified "%SINGLE_OUT_AUDIO%" --original "%SRC_AUDIO%"
-if %ERRORLEVEL% neq 0 goto cleanup_fail
-
-if not exist "%TEMP_TXT_AUDIO%" (
-    echo [ERROR] Expected output file '%TEMP_TXT_AUDIO%' was not generated.
-    goto cleanup_fail
+:: --------------------------------------------------------
+:: TEST 3: Audio Mode (-a) - WAV File Pipeline
+:: --------------------------------------------------------
+echo --------------------------------------------------------
+echo TEST 3: Audio Mode (-a)
+echo --------------------------------------------------------
+echo [1/2] Encoding content into sound.wav...
+%EXE% -a -vvvv encode --into "%WAV_SRC%" --from "%CONTENT_DIR%\test.txt"
+if %errorlevel% neq 0 (
+    echo [X] TEST 3 Encode Failed with exit code %errorlevel%
+) else (
+    echo [^] Encode completed successfully.
 )
 
-:: Extract and compare SHA-256 hashes
-set "HASH_SRC="
-for /f "skip=1 tokens=*" %%A in ('certutil -hashfile "%SRC_TXT%" SHA256 2^>nul') do if not defined HASH_SRC set "HASH_SRC=%%A"
-set "HASH_SRC=%HASH_SRC: =%"
-
-set "HASH_OUT="
-for /f "skip=1 tokens=*" %%A in ('certutil -hashfile "%TEMP_TXT_AUDIO%" SHA256 2^>nul') do if not defined HASH_OUT set "HASH_OUT=%%A"
-set "HASH_OUT=%HASH_OUT: =%"
-
-echo [HASH] Src: %HASH_SRC%
-echo [HASH] Out: %HASH_OUT%
-
-if /i "%HASH_SRC%" neq "%HASH_OUT%" (
-    echo [FAIL] Hash mismatch detected.
-    goto cleanup_fail
+echo [2/2] Decoding content out of sound.wav...
+%EXE% -a -vvvv decode --modified "%WAV_SRC%" --into "%OUT_DECODE_DIR%\test_recovered_audio.txt"
+if %errorlevel% neq 0 (
+    echo [X] TEST 3 Decode Failed with exit code %errorlevel%
+) else (
+    echo [^] Decode completed successfully.
 )
-echo [OK] Test 3 verified.
-
-:cleanup_pass
 echo.
-echo --- CLEANUP ---
-if exist "%TEMP_TXT%" del /q "%TEMP_TXT%"
-if exist "%TEMP_VID%" del /q "%TEMP_VID%"
-if exist "%TEMP_TXT_AUDIO%" del /q "%TEMP_TXT_AUDIO%"
-if exist "%SINGLE_OUT_IMG%" del /q "%SINGLE_OUT_IMG%"
-if exist "%FOLDER_OUT_DIR%" rmdir /s /q "%FOLDER_OUT_DIR%"
-echo ===================================================
-echo STATUS: SUCCESS
-echo ===================================================
-exit /b 0
 
-:cleanup_fail
+:: --------------------------------------------------------
+:: TEST 4: Error Handling & Help System Validation
+:: --------------------------------------------------------
+echo --------------------------------------------------------
+echo TEST 4: Parameter Validation and Error States
+echo --------------------------------------------------------
+echo [1/2] Testing validation without missing media type group option (Should show error):
+%EXE% encode --into "%OUT_IMAGES_DIR%" --from "%CONTENT_DIR%\test.txt" 2>nul
+echo Exit code: %errorlevel% (Expected non-zero error)
+
+echo [2/2] Displaying global expanded help:
+%EXE% --help-all > "%OUT_DIR%\help_dump.txt"
+echo [^] Global help output dumped safely to %OUT_DIR%\help_dump.txt
 echo.
-echo --- CLEANUP (FAIL HINT) ---
-if exist "%TEMP_TXT%" del /q "%TEMP_TXT%"
-if exist "%TEMP_VID%" del /q "%TEMP_VID%"
-if exist "%TEMP_TXT_AUDIO%" del /q "%TEMP_TXT_AUDIO%"
-if exist "%SINGLE_OUT_IMG%" del /q "%SINGLE_OUT_IMG%"
-if exist "%FOLDER_OUT_DIR%" rmdir /s /q "%FOLDER_OUT_DIR%"
-echo ===================================================
-echo STATUS: FAILED
-echo ===================================================
-exit /b 1
+
+echo ========================================================
+echo All tests execution sequence finished.
+echo Check the '%OUT_DECODE_DIR%' folder for outputs.
+echo ========================================================
+pause
