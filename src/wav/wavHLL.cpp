@@ -163,7 +163,11 @@ bool EncodeWavFolder(const std::string &ifoldername, const std::string &ffilenam
     state.out("Starting...", 4);
     std::string absolutePath;
     std::string mfoldername = ifoldername + "M";
+    std::string command = "mkdir " + mfoldername;
+    state.out("trying:'"+command+"'",4); 
+    system(command.c_str());
     std::vector<std::string> FileList = GetFilenamesFromFolder(ifoldername, state);
+    const std::vector<std::string> FileListOriginal = GetFilenamesFromFolder(ifoldername, state);
     std::vector<bool> farray;
     std::vector<bool> aChunk;
     std::vector<short> buffer;
@@ -182,11 +186,13 @@ bool EncodeWavFolder(const std::string &ifoldername, const std::string &ffilenam
     state.out("Calculating NIL...", 4);
     for (NIL = 0; bitcounter < farray.size(); NIL++)
     {
-        state.out("Iteration:" + ts(NIL) + "/" + ts(farray.size()) + "(MAX)", 4);
-        state.out("Bitcounter:" + ts(bitcounter), 4);
+        state.out("Iteration:" + ts(NIL) + "/" + ts(FileList.size()) + "(MAX)", 4);
 
-        state.out("Opening file:" + FileList[NIL], 1);
-        infline = sf_open(FileList[NIL].c_str(), SFM_READ, &sfinfo);
+
+
+         absolutePath=ifoldername+"\\"+FileList[NIL];
+        state.out("Opening file:" + absolutePath, 1);
+        infline = sf_open(absolutePath.c_str(), SFM_READ, &sfinfo);
         originalFrames = sfinfo.frames;
         if (!infline)
             InvalidInputMessage("Could not open input file");
@@ -197,23 +203,27 @@ bool EncodeWavFolder(const std::string &ifoldername, const std::string &ffilenam
         state.out("Frames     :" + std::to_string(sfinfo.frames), 4);
 
         totalSamples = sfinfo.frames * sfinfo.channels;
-        state.out("Resizing buffer...", 4);
+        state.out("Resizing buffer to:"+ts(totalSamples), 4);
         buffer.resize(totalSamples);
-
-        state.out("Read SF", 1);
+        state.out("Size of buffer:"+ts(buffer.size()),4);
+        state.out("Reading file to memory", 1);
         framesRead = sf_readf_short(infline, buffer.data(), sfinfo.frames);
         if (framesRead != sfinfo.frames)
             InvalidInputMessage("Read Frame Count does not match expected Frame Count\nRead Frame Count" + ts(framesRead) + "\nExpected:" + ts(sfinfo.frames));
         sf_close(infline);
+        state.out("Sucessfully read file to memory",4);
         bitcounter = bitcounter + CheckWavFileCapacityBackend(buffer, state);
+                state.out("Bitcounter:" + ts(bitcounter), 4);
+        state.out("From File size (in bits:)"+ts(farray.size()),4);
     }
 
-    for (int i = 0; i <= NIL; i++)
+    for (int i = 0; i < NIL; i++)
     {
+        absolutePath=ifoldername+"\\"+FileList[i];
         state.out("Iteration:" + ts(i) + "/" + ts(NIL), 4);
         state.out("StringI:"+ts(stringI),4);
-        state.out("Opening file:" + FileList[i], 1);
-        infline = sf_open(FileList[i].c_str(), SFM_READ, &sfinfo);
+        state.out("Opening file:" + absolutePath, 1);
+        infline = sf_open(absolutePath.c_str(), SFM_READ, &sfinfo);
         originalFrames = sfinfo.frames;
         if (!infline)
             InvalidInputMessage("Could not open input file");
@@ -227,13 +237,16 @@ bool EncodeWavFolder(const std::string &ifoldername, const std::string &ffilenam
         state.out("Resizing buffer...", 4);
         buffer.resize(totalSamples);
 
-        state.out("Read SF", 1);
+        state.out("Read File to memory", 1);
         framesRead = sf_readf_short(infline, buffer.data(), sfinfo.frames);
         if (framesRead != sfinfo.frames)
             InvalidInputMessage("Read Frame Count does not match expected Frame Count\nRead Frame Count" + ts(framesRead) + "\nExpected:" + ts(sfinfo.frames));
         sf_close(infline);
         state.out("Writing to file (memory)...",4);
-        for (bitI = 0; bitI <= farray.size(); bitI++)
+        state.out("stringI:"+ts(stringI),4);
+        state.out("buffer size:"+ts(buffer.size()),4);
+        state.out("farray size:"+ts(farray.size()),4);
+        for (bitI = 0; bitI < buffer.size()&&stringI<farray.size(); bitI++)
         {
             if (std::abs(buffer[bitI]) < 32767 && buffer[bitI] != 0)
             {
@@ -249,10 +262,12 @@ bool EncodeWavFolder(const std::string &ifoldername, const std::string &ffilenam
             }
         }
         absolutePath= mfoldername+"\\"+FileList[i].insert(FileList[i].length() - 4, 1, 'M');
+        command= "type NUL > " + absolutePath;
+        system(command.c_str());
          state.out("Opening file:"+absolutePath,4);
          SNDFILE *outfile = sf_open(absolutePath.c_str(), SFM_WRITE, &sfinfo);
         if (!outfile)
-        InvalidInputMessage("Could not open output File");
+        InvalidInputMessage("Could not open output File. sf_strerror:"+std::string(sf_strerror(NULL)));
 
     state.out("Writing ... (disk)", 1);
     framesWritten = sf_writef_short(outfile, buffer.data(), originalFrames);
@@ -260,6 +275,19 @@ bool EncodeWavFolder(const std::string &ifoldername, const std::string &ffilenam
         InvalidInputMessage("Written Frame Count does not match expected Frame Count");
     sf_close(outfile);
 
+    }
+
+
+      if (state.deleteOverflow)
+    {
+        for (int i = NIL; i < FileListOriginal.size(); i++)
+        {
+
+            absolutePath = ifoldername + "\\" + FileListOriginal[i];
+                        state.out("Deleting file:" + absolutePath, 1);
+            if (remove(absolutePath.c_str()) != 0)
+                InvalidInputMessage("Failed to delete file");
+        }
     }
     return 0;
 }

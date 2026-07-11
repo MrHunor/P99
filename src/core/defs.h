@@ -13,16 +13,20 @@ public:
     //LINK ../../docs/core.md:6
     void out(const std::string &output, int importance, std::source_location location = std::source_location::current())
     {
-        if (importance <= verbose && verbose >= 4)
-            std::cout << location.function_name() << "->";
-        if (importance <= verbose)
-            std::cout << output;
+        if(importance>verbose) return;
+        std::string message = "";
+
+        if ( verbose >= 4 ) message += std::format("{}->",location.function_name());
+        message+=output;
         if (verbose >= 4)
         {
             auto now = std::chrono::system_clock::now();
-            std::cout << "@" << std::format("{}",now);
+            //This may look weird but this just pads the message to x characters so the timestamps are cleanly aligned
+            std::cout<< std::format("{:<150}    @{}",message,now);
         }
-        if (importance <= verbose)
-            std::cout << std::endl<<std::flush;
+        else std::cout<<message;
+
+        std::cout<<std::endl<<std::flush;
+    
     }
 };

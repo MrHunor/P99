@@ -40,8 +40,7 @@ if(state.verbose>=3)system("systeminfo");
                             
                                if(*audio)
                             {
-                               
-                          //TBD
+                               EncodeWavFolder(ifilefoldername,ffilename,state);
                             }
                              if (*image)
                             {

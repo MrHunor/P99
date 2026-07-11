@@ -22,7 +22,7 @@ int CheckWavFileCapacityBackend( std::vector<short> buffer, stateClass& state)
 {
 int counter=0;
 int bufferSize=buffer.size();
-for(int bitI = 0; bitI<=buffer.size();bitI++)
+for(int bitI = 0; bitI<buffer.size();bitI++)
 {
   if (std::abs(buffer[bitI]) < 32767 && buffer[bitI] != 0)counter++;
 }
