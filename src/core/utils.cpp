@@ -119,6 +119,7 @@ void CheckFilelists(const std::vector<std::string> &FileList1, const std::vector
         state.out("Current mapping:Filelist1:" + FileList1[i] + "->" + FileList2[i], 4);
         std::string modified = FileList1[i];
         modified.insert(modified.length() - 4, 1, 'M');
+        state.out("Comparing modified:"+modified+"| Original:"+FileList2[i],4);
         if (modified != FileList2[i])
         {
             state.out("Pair Mismatch", 1);

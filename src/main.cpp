@@ -65,7 +65,9 @@ if(state.verbose>=3)system("systeminfo");
 
      if(std::filesystem::is_directory(mfilefoldername)) {
         if(*audio)
-        {}
+        {
+         DecodeWavFolder(mfilefoldername,ifilefoldername,state);
+        }
         else if (*image)
         {DecodeImageFolder(mfilefoldername, ifilefoldername, state);}
         
