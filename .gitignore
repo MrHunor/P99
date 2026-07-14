@@ -13,11 +13,5 @@
 #testfiles
 testfiles/*
 
-#executable
-main.exe
-
-#angr-managment analysis files
-main.exe*
-
-#sndfile.dll
-sndfile.dll
+#Cmake build foder
+build/*
