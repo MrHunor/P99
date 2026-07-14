@@ -303,7 +303,6 @@ bool DecodeWavFolder(const std::string &mfoldername, const std::string ifolderna
     std::vector<short> mbuffer;
     std::vector<short> ibuffer;
     std::vector<bool> decoded;
-    std::string filename;
     std::string absolutePath;
     SF_INFO msfInfo;
     SF_INFO isfInfo;
@@ -325,12 +324,12 @@ bool DecodeWavFolder(const std::string &mfoldername, const std::string ifolderna
         InvalidInputMessage("Sample amounts do not match, indicating file corruption or wrong file selection");
         
     
-    filename = ReadFilenameFromWavC(mbuffer, ibuffer, bitI, stringI, state);
+    ffilename = ReadFilenameFromWavC(mbuffer, ibuffer, bitI, stringI, state);
     // read Rest of the remainign first file
     ReadDataFromWavC(mbuffer, ibuffer, bitI, stringI, decoded, state);
-
+    state.out("Reading loop...",1);
     // loop the rest of the files
-    for (int i = 1; i <= iFileList.size(); i++)
+    for (int i = 1; i < iFileList.size(); i++)
     {
         state.out("Interation:"+ts(i)+"/"+ts(iFileList.size()),4);
         mfile = sf_open(mFileList[i].c_str(), SFM_READ, &msfInfo);
@@ -341,7 +340,6 @@ bool DecodeWavFolder(const std::string &mfoldername, const std::string ifolderna
         sf_readf_short(ifile, ibuffer.data(), isfInfo.frames);
         if (mbuffer.empty() || ibuffer.empty())
         InvalidInputMessage("Could not read Files to Memory");
-        state.out("Validate Sizes", 1);
         if (msfInfo.frames * msfInfo.channels != isfInfo.frames * isfInfo.channels)
             InvalidInputMessage("Sample amounts do not match, indicating file corruption or wrong file selection");
    

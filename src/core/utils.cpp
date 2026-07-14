@@ -225,11 +225,11 @@ void ReadFileToArray(const std::string &filename, std::vector<bool> &array, stat
 
 void WriteBitsToFile(const std::string &filename, const std::vector<bool> &bits, stateClass &state)
 {
-    state.out("File: Write Bits " + filename, 1);
+    state.out("Writing Bits to file:" + filename, 1);
     std::ofstream out(filename, std::ios::binary);
     if (!out)
     {
-        throw std::runtime_error("Failed to open file");
+      InvalidInputMessage("Failed to open file");
     }
 
     std::vector<uint8_t> bytes;
