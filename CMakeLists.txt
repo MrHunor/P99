@@ -14,13 +14,13 @@ add_executable(main ${ALL_SOURCES})
 
 target_include_directories(main PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/include/stb"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/include/CLI11" # Behält dein "include/include" bei
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/CLI11"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/libsndfile/include"
 )
 
 target_link_libraries(main PRIVATE stdc++exp)
 
-target_link_libraries(main PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/sndfile.dll")
+target_link_libraries(main PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include/libsndfile/lib/libsndfile.a")
 
 target_link_options(main PRIVATE "-static")
 
