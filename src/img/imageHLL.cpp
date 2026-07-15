@@ -40,11 +40,11 @@ int checkImageFolderCapacityMidEnd(const std::string &ifoldername, stateClass &s
         diff = counter;
         counter = counter + checkImageCapacityBackend(img, imgSize, state);
         diff = counter - diff;
-        state.out("File:" + fullPath + " has a capacity of:" + returnSpaceBitsAsSensefulValue(std::round(diff / 8)) + ", which contributes to the full Capacity of the Folder which is currently measure to be:" + returnSpaceBitsAsSensefulValue(std::round(counter / 8)) + "", 2);
+        state.out("File:" + fullPath + " has a capacity of:" + returnSpaceBytesAsSensefulValue(std::round(diff / 8)) + ", which contributes to the full Capacity of the Folder which is currently measure to be:" + returnSpaceBytesAsSensefulValue(std::round(counter / 8)) + "", 2);
         state.out("Freeing Memory...", 4);
         stbi_image_free(img);
     }
-    state.out("Final Capacity of:" + ifoldername + ":" + returnSpaceBitsAsSensefulValue(std::round(counter / 8)), 1);
+    state.out("Final Capacity of:" + ifoldername + ":" + returnSpaceBytesAsSensefulValue(std::round(counter / 8)), 1);
     state.out("Finished", 4);
     return counter;
 }

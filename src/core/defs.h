@@ -3,11 +3,13 @@
 #define ts(x) std::to_string(x)
 #include <filesystem>
 #include <iostream>
+#include <fstream>
 #include <source_location>
 namespace fs = std::filesystem;
 class stateClass
 {
 public:
+std::ofstream logFile{"log.txt"};
     int verbose;
     bool deleteOverflow;
     // LINK ../../docs/core.md:6
@@ -24,7 +26,7 @@ public:
         if (verbose >= 4)message += std::format("{}->", location.function_name());
         message += output;
          std::cout << message;
-        std::cout << std::endl
-                  << std::flush;
+        std::cout << std::endl;
+        if(logFile.is_open()) logFile<<message<<std::endl;
     }
 };

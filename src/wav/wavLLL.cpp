@@ -82,6 +82,7 @@ void ReadDataFromWavC(std::vector<short> &mbuffer, std::vector<short> &ibuffer, 
     {
         if (std::abs(ibuffer[bitI]) < 32767 && ibuffer[bitI] != 0)
         {
+            //state.out("Read Valid bit",4);
             if (mbuffer[bitI] == ibuffer[bitI] - 1)
             {
                 decoded.push_back(false);

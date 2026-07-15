@@ -217,6 +217,8 @@ bool EncodeWavFolder(const std::string &ifoldername, const std::string &ffilenam
 
     for (int i = 0; i < NIL; i++)
     {
+    
+        sfinfo={};
         absolutePath = ifoldername + "\\" + FileList[i];
         state.out("Iteration:" + ts(i) + "/" + ts(NIL), 4);
         state.out("StringI:" + ts(stringI), 4);
@@ -331,8 +333,12 @@ bool DecodeWavFolder(const std::string &mfoldername, const std::string ifolderna
     // loop the rest of the files
     for (int i = 1; i < iFileList.size(); i++)
     {
-        state.out("Interation:"+ts(i)+"/"+ts(iFileList.size()),4);
-        mfile = sf_open(mFileList[i].c_str(), SFM_READ, &msfInfo);
+        bitI=0;
+        state.out("Interation:"+ts(i)+"/"+ts(iFileList.size()-1),4);
+        state.out("Read so far:"+returnSpaceBytesAsSensefulValue(std::round(decoded.size()/8)),4);
+        absolutePath=mfoldername+"\\"+mFileList[i];
+        mfile = sf_open(absolutePath.c_str(), SFM_READ, &msfInfo);
+        absolutePath=ifoldername+"\\"+iFileList[i];
         ifile = sf_open(iFileList[i].c_str(), SFM_READ, &isfInfo);
              mbuffer.resize(msfInfo.channels * msfInfo.frames);
         ibuffer.resize(isfInfo.channels * isfInfo.frames);

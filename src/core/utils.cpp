@@ -130,7 +130,7 @@ void CheckFilelists(const std::vector<std::string> &FileList1, const std::vector
     state.out("Finished", 4);
 }
 
-std::string returnSpaceBitsAsSensefulValue(int value)
+std::string returnSpaceBytesAsSensefulValue(int value)
 {
     float floatvalue = value;
     if (value > 1073741824)
