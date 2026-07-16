@@ -1,0 +1,45 @@
+name: Windows Build & Pre-Release
+
+on:
+  push:
+    branches:
+      - '**'
+
+permissions:
+  contents: write # Required to create/update the release
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0} # Ensures steps run inside the MSYS2 environment
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          # Install GCC and CMake for the UCRT64 subsystem
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            make
+
+      - name: Configure CMake
+        run: cmake -S . -B build
+
+      - name: Build Project
+        run: cmake --build build --config Release
+
+      - name: Create Pre-Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-build
+          name: "Development Build"
+          prerelease: true
+          body: "Automated build for commit ${{ github.sha }}"
+          files: build/main.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

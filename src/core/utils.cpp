@@ -47,13 +47,13 @@ bool checkEx(const std::string &path, stateClass &state)
 
 std::vector<std::string> GetFilenamesFromFolder(std::string path, stateClass &state)
 {
-    state.out("Dir: Scan " + path, 4);
+    state.out("Starting... " + path, 4);
     std::vector<std::string> PathV;
     for (const auto &entry : fs::directory_iterator(path))
     {
         PathV.push_back(entry.path().filename().string());
     }
-    state.out("Dir: Sort " + ts(PathV.size()) + " items", 4);
+    state.out("Sorting: " + ts(PathV.size()) + " items", 4);
     std::sort(PathV.begin(), PathV.end(), [](const std::string &a, const std::string &b)
               {
             auto getNumber = [](const std::string& s) {
@@ -63,7 +63,7 @@ std::vector<std::string> GetFilenamesFromFolder(std::string path, stateClass &st
                 return std::stoi(s.substr(0, pos));
             };
             return getNumber(a) < getNumber(b); });
-    state.out("Dir: Done", 4);
+    state.out("Finished", 4);
     return PathV;
 }
 
