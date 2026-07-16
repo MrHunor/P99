@@ -28,7 +28,7 @@ jobs:
             make
 
       - name: Configure CMake
-        run: cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build
 
       - name: Build Project
         run: cmake --build build --config Release
