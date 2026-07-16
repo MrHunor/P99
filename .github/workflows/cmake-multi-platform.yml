@@ -1,0 +1,30 @@
+name: Windows MinGW Build
+
+on:
+  push:
+    branches:
+      - '**' # Triggers on any push to any branch
+
+jobs:
+  build-windows:
+    name: Build C++23 on Windows
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Modern MinGW (GCC)
+        uses: egor-tensin/setup-mingw@v2
+        with:
+          platform: x64
+
+      - name: Configure CMake
+        # We explicitly enforce MinGW Makefiles and GCC compilers
+        run: cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+        env:
+          CC: gcc
+          CXX: g++
+
+      - name: Build Project
+        run: cmake --build build --config Release
