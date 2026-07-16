@@ -205,8 +205,8 @@ void ReadFileToArray(const std::string &filename, std::vector<bool> &array, stat
     std::vector<bool> header = TextToAsciiB(filename + "|");
 
     array.clear();
-    state.out("Reserving array for Size: " + ts(header.size()) + " + " + ts(size), 4);
-    array.reserve(header.size() + size);
+    state.out("Reserving array for Size: " + ts(header.size()) + " + " + ts(size*8), 4);
+    array.reserve(header.size() + size*8);
     state.out("Reserving finished", 4);
 
     state.out("Inserting header...", 4);

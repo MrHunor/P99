@@ -20,5 +20,5 @@
 
 
 size_t checkImageCapacityBackend(unsigned char *img, size_t imgSize, stateClass &state);
-bool WriteToImage(unsigned char *img, size_t capacity, const std::vector<bool> &s, stateClass &state, int &bitI, int &stringI);
+bool WriteToImage(unsigned char *img, size_t imgSize, const std::vector<bool> &s, stateClass &state, int &bitI, int &stringI);
 void ReadDataFromImageC(unsigned char *imgC, unsigned char *imgR, int size, int &bitI, int &stringI, std::vector<bool> &decoded, stateClass &state);
