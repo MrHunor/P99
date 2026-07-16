@@ -76,12 +76,13 @@ std::string ReadFilenameFromWavC(std::vector<short> &mbuffer, std::vector<short>
 
 void ReadDataFromWavC(std::vector<short> &mbuffer, std::vector<short> &ibuffer, int &bitI, int &stringI, std::vector<bool> &decoded, stateClass &state)
 {
-    state.out("Read I16 Data", 1);
+    state.out("Reading Data...", 1);
     bool end = false;
-    while (!end)
+    while (!end&&bitI<mbuffer.size())
     {
         if (std::abs(ibuffer[bitI]) < 32767 && ibuffer[bitI] != 0)
         {
+            //state.out("Read Valid bit",4);
             if (mbuffer[bitI] == ibuffer[bitI] - 1)
             {
                 decoded.push_back(false);
@@ -99,5 +100,5 @@ void ReadDataFromWavC(std::vector<short> &mbuffer, std::vector<short> &ibuffer, 
         }
         bitI++;
     }
-    state.out("I16 Done", 4);
+    state.out("Done", 4);
 }

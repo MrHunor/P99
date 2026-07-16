@@ -40,11 +40,11 @@ int checkImageFolderCapacityMidEnd(const std::string &ifoldername, stateClass &s
         diff = counter;
         counter = counter + checkImageCapacityBackend(img, imgSize, state);
         diff = counter - diff;
-        state.out("File:" + fullPath + " has a capacity of:" + returnSpaceBitsAsSensefulValue(std::round(diff / 8)) + ", which contributes to the full Capacity of the Folder which is currently measure to be:" + returnSpaceBitsAsSensefulValue(std::round(counter / 8)) + "", 2);
+        state.out("File:" + fullPath + " has a capacity of:" + returnSpaceBytesAsSensefulValue(std::round(diff / 8)) + ", which contributes to the full Capacity of the Folder which is currently measure to be:" + returnSpaceBytesAsSensefulValue(std::round(counter / 8)) + "", 2);
         state.out("Freeing Memory...", 4);
         stbi_image_free(img);
     }
-    state.out("Final Capacity of:" + ifoldername + ":" + returnSpaceBitsAsSensefulValue(std::round(counter / 8)), 1);
+    state.out("Final Capacity of:" + ifoldername + ":" + returnSpaceBytesAsSensefulValue(std::round(counter / 8)), 1);
     state.out("Finished", 4);
     return counter;
 }
@@ -247,6 +247,7 @@ bool EncodeImageFolder(const std::string &ifoldername, const std::string &ffilen
     for (size_t i = 0; i < NIL; i++)
     {
         state.out("Iteration:" + std::to_string(i) + "/" + std::to_string(NIL), 4);
+        state.out("Data written:"+returnSpaceBytesAsSensefulValue(std::round(offset/8)),4);
         fullPath = ifoldername + "\\" + FileList[i];
         img = stbi_load(fullPath.c_str(), &w, &h, &channels, 0);
 
@@ -259,7 +260,7 @@ bool EncodeImageFolder(const std::string &ifoldername, const std::string &ffilen
         bitI = 0;
        stringI = 0;
         state.out("Writing to Image (Memory)...", 1);
-        WriteToImage(img, capacity, aChunk, state, bitI, stringI);
+        WriteToImage(img, w*h*channels, aChunk, state, bitI, stringI);
         state.out("Actual Chunk Size:" + std::to_string(stringI)+"(If this varies from the previous message, something is seriously wrong)", 4);
         offset = offset + stringI;
 
@@ -330,13 +331,14 @@ bool DecodeImageFolder(const std::string &mFoldername, const std::string &iFolde
     for (size_t i = 1; i < eFileList.size(); i++)
     {
         state.out("Iteration:" + std::to_string(i) + "/" + std::to_string(eFileList.size()), 4);
+        state.out("Size of Read data:" + returnSpaceBytesAsSensefulValue(decoded.size()), 4);
         stringI = 0;
         bitI = 0;
         decodedBuffer.clear();
 
-        imgO = stbi_load((iFoldername + "\\" + oFileList[i]).c_str(), &w, &h, &channels, 3);
-        imgE = stbi_load((mFoldername + "\\" + eFileList[i]).c_str(), &w, &h, &channels, 3);
-
+        imgO = stbi_load((iFoldername + "\\" + oFileList[i]).c_str(), &w, &h, &channels, 0);
+        imgE = stbi_load((mFoldername + "\\" + eFileList[i]).c_str(), &w, &h, &channels, 0);
+        if(imgO==nullptr ||imgE==nullptr)InvalidInputMessage("Failed to load either:"+iFoldername + "\\" + oFileList[i]+" or "+mFoldername + "\\" + eFileList[i]);
         ReadDataFromImageC(imgO, imgE, (w * h * channels), bitI, stringI, decodedBuffer, state);
         decoded.insert(decoded.end(), decodedBuffer.begin(), decodedBuffer.end());
 

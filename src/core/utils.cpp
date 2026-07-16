@@ -119,6 +119,7 @@ void CheckFilelists(const std::vector<std::string> &FileList1, const std::vector
         state.out("Current mapping:Filelist1:" + FileList1[i] + "->" + FileList2[i], 4);
         std::string modified = FileList1[i];
         modified.insert(modified.length() - 4, 1, 'M');
+        state.out("Comparing modified:"+modified+"| Original:"+FileList2[i],4);
         if (modified != FileList2[i])
         {
             state.out("Pair Mismatch", 1);
@@ -129,7 +130,7 @@ void CheckFilelists(const std::vector<std::string> &FileList1, const std::vector
     state.out("Finished", 4);
 }
 
-std::string returnSpaceBitsAsSensefulValue(int value)
+std::string returnSpaceBytesAsSensefulValue(int value)
 {
     float floatvalue = value;
     if (value > 1073741824)
@@ -204,8 +205,8 @@ void ReadFileToArray(const std::string &filename, std::vector<bool> &array, stat
     std::vector<bool> header = TextToAsciiB(filename + "|");
 
     array.clear();
-    state.out("Reserving array for Size: " + ts(header.size()) + " + " + ts(size), 4);
-    array.reserve(header.size() + size);
+    state.out("Reserving array for Size: " + ts(header.size()) + " + " + ts(size*8), 4);
+    array.reserve(header.size() + size*8);
     state.out("Reserving finished", 4);
 
     state.out("Inserting header...", 4);
@@ -224,11 +225,11 @@ void ReadFileToArray(const std::string &filename, std::vector<bool> &array, stat
 
 void WriteBitsToFile(const std::string &filename, const std::vector<bool> &bits, stateClass &state)
 {
-    state.out("File: Write Bits " + filename, 1);
+    state.out("Writing Bits to file:" + filename, 1);
     std::ofstream out(filename, std::ios::binary);
     if (!out)
     {
-        throw std::runtime_error("Failed to open file");
+      InvalidInputMessage("Failed to open file");
     }
 
     std::vector<uint8_t> bytes;

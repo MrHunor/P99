@@ -38,7 +38,7 @@ size_t checkImageCapacityBackend(unsigned char *img, size_t imgSize, stateClass 
     return counter;
 }
 
-bool WriteToImage(unsigned char *img, size_t capacity, const std::vector<bool> &s, stateClass &state, int &bitI, int &stringI)
+bool WriteToImage(unsigned char *img, size_t imgSize, const std::vector<bool> &s, stateClass &state, int &bitI, int &stringI)
 {
     state.out("Starting...", 4);
     auto sLength = s.size();
@@ -47,9 +47,9 @@ bool WriteToImage(unsigned char *img, size_t capacity, const std::vector<bool> &
     while (stringI < sLength)
     {
         // state.out("\nimgSize:"+ts(imgSize)+"\nbitI:"+ts(bitI)+"\nstringI"+ts(stringI)+"\n",4);
-        if (bitI >= capacity)
+        if (bitI >= imgSize)
         {
-            state.out("Image Capacity overflow\ncapacity:" + ts(capacity) + "\nBitI:" + ts(bitI) + "\nstringI:" + ts(stringI), 4);
+            state.out("Image Capacity overflow\nimgSIze:" + ts(imgSize) + "\nBitI:" + ts(bitI) + "\nstringI:" + ts(stringI), 4);
             return 0;
         }
         if (img[bitI] > 0 && img[bitI] < 255 &&channelCounter != 4)

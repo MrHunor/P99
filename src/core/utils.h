@@ -23,7 +23,7 @@ void ReccomendActionFilelistMismatch(const std::vector<std::string> &FileList1OR
 
 void CheckFilelists(const std::vector<std::string> &FileList1, const std::vector<std::string> &FileList2, stateClass &state);
 
-std::string returnSpaceBitsAsSensefulValue(int value);
+std::string returnSpaceBytesAsSensefulValue(int value);
 
 /* =========================================================
    2. BIT / FILE UTILITIES
