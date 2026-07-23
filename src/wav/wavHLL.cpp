@@ -18,6 +18,32 @@
 #include "../core/defs.h"
 #include "../core/utils.h"
 #include "../wav/wavLLL.h"
+
+void CheckWavFileCapacityFrontEnd(const std::string &ifilename, stateClass& state)
+{
+    state.out("Starting...",4);
+    std::vector<short> buffer;
+    sf_count_t framesRead;
+    SF_INFO sfinfo;
+    sfinfo.format = 0;
+    SNDFILE* file = sf_open(ifilename.c_str(),SFM_READ, &sfinfo);
+        if (!file)
+            InvalidInputMessage("Could not open input file");
+
+        state.out("Details:", 4);
+        state.out("Sample Rate:" + std::to_string(sfinfo.samplerate) + "Hz", 4);
+        state.out("Channels   :" + std::to_string(sfinfo.channels), 4);
+        state.out("Frames     :" + std::to_string(sfinfo.frames), 4);
+        buffer.resize(sfinfo.channels * sfinfo.frames);
+                state.out("Reading file to memory", 1);
+        framesRead = sf_readf_short(file,buffer.data(),sfinfo.frames);
+         if (framesRead != sfinfo.frames)
+            InvalidInputMessage("Read Frame Count does not match expected Frame Count\nRead Frame Count" + ts(framesRead) + "\nExpected:" + ts(sfinfo.frames));
+        sf_close(file);
+        state.out("Total Capacity:"+returnSpaceBytesAsSensefulValue(CheckWavFileCapacityBackend(buffer,state)/8),1);
+    }
+
+
 bool EncodeWav(const std::string &ifilename, const std::string &ffilename, stateClass &state)
 {
     state.out("Init", 1);
