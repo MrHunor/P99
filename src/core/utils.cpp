@@ -137,8 +137,9 @@ std::string returnSpaceBytesAsSensefulValue(int value)
         return ts(floatvalue / 1073741824) + "GB";
     if (value > 1048576)
         return ts(floatvalue / 1048576) + "MB";
-    if (value > 1, 024)
+    if (value > 1024)
         return ts(floatvalue / 1024) + "KB";
+    return ts(floatvalue)+ "Bytes";
 }
 
 /* =========================================================2. BIT / FILE UTILITIES========================================================= */

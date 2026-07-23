@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     std::string ifilefoldername;
     std::string ffilename;
     std::string mfilefoldername;
-    CLI::App app{"P99:Media Encoder/Decoder"};
+    CLI::App app{"P99:File to Media File Steganography COPYRIGHT 2026 MrHunor, GPLv3"};
     auto *media_group = app.add_option_group("Media Into Type");
     app.set_help_all_flag("--help-all", "Expand and show all subcommand options");
     app.add_flag("-v,--verbose", state.verbose, "Enable verbose output");
