@@ -24,19 +24,19 @@ Run `cmake --build build` in the root of the Directory to generate the executabl
 
 
 `OPTIONS:`
-` -h,     --help              Print this help message and exit`
-`          --help-all          Expand and show all subcommand options`
-`  -v,     --verbose [0]       Enable verbose output`
-`[Option Group: Media Into Type]`
+` -h,     --help              Print this help message and exit`  
+`          --help-all          Expand and show all subcommand options`  
+`  -v,     --verbose [0]       Enable verbose output`  
+`[Option Group: Media Into Type]`  
 
- ` [Exactly 1 of the following options are required]`
+ ` [Exactly 1 of the following options are required]`  
 
 
-`OPTIONS:`
-`  -a,     --audio             Into File or all Files in the Folder is/are Audio File`
-`  -m,     --image             Into File or all Files in the Folder is/are image`
+`OPTIONS:`  
+`  -a,     --audio             Into File or all Files in the Folder is/are Audio File`  
+`  -m,     --image             Into File or all Files in the Folder is/are image`  
 
-`SUBCOMMANDS:`
-`  encode                      Encode a File into a image or folder containing images`
-`  decode                      Decode a File from a image or folder containing images`
-`  check                       Check capacity of a Media File (currently only supportes images)`
+`SUBCOMMANDS:`  
+`  encode                      Encode a File into a image or folder containing images`  
+`  decode                      Decode a File from a image or folder containing images`  
+`  check                       Check capacity of a Media File (currently only supportes images)`  

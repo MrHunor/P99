@@ -88,11 +88,10 @@ DecodeWav(mfilefoldername,ifilefoldername,state);
      check->callback([&]()
      {
         if(state.verbose>=3)system("systeminfo");
-        state.out("Running Check callback",4);
  if(std::filesystem::is_directory(ifilefoldername)) {
         if(*audio)
         {
-            state.out("Audio Files are currently unsuppored",1);
+            state.out("Audio Folders are currently unsuppored",1);
         }
         else if (*image)
         {
@@ -103,8 +102,8 @@ checkImageFolderCapacityMidEnd(ifilefoldername,state);
      } else if (std::filesystem::is_regular_file(ifilefoldername)) {
         if(*audio)
         {
-    
-           state.out("Audio Files are currently unsuppored",1);
+  
+           CheckWavFileCapacityFrontEnd(ifilefoldername,state);
         }
         else if(*image)
         {

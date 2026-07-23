@@ -22,3 +22,4 @@ bool EncodeWav(const std::string &ifilename, const std::string &ffilename, state
 bool DecodeWav(const std::string &mFilename, const std::string &iFilename, stateClass &state);
 bool EncodeWavFolder(const std::string &ifoldername, const std::string &ffilename, stateClass &state);
 bool DecodeWavFolder(const std::string &mfoldername, const std::string ifoldername, stateClass &state);
+void CheckWavFileCapacityFrontEnd(const std::string &ifilename, stateClass& state);
