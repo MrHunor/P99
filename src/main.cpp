@@ -1,3 +1,5 @@
+/* main.cpp: WAV-related helpers. Log lines are labeled for readability. */
+
 
 #pragma warning(disable : 4996)
 #define ts(x) std::to_string(x)
