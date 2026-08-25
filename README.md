@@ -1,3 +1,5 @@
+#Attention! Development for this Repo is currently halted! The Project is being continued on Linux. Please check out the corresponding Linux Repo.
+
 # P99 - File to Media File Steganography © 2026 MrHunor, GPLv3
 
 ## Features:
